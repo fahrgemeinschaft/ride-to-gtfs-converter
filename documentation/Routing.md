@@ -1,8 +1,10 @@
 # Routing tool evaluation
 
-We work with routing to generate inbetween stops where passengers can potentially join a ride. This must be coordinated with the driver to arrange an additional pickup or drop-off on the way. 3 tools will be evaluated using an example route from Berlin to Hamburg.
+We work with routing to generate in between stops where passengers can potentially join a ride. This must be coordinated with the driver to arrange an additional pickup or drop-off on the way. 3 tools will be evaluated using an example ride from Berlin to Hamburg.
 
 ### OSRM
+
+The OSRM routing response has different collections of generated in between stops as listed in the table.
 
 | stops type | generated in                                     | amount |
 |------------|--------------------------------------------------|--------|
@@ -26,6 +28,8 @@ We work with routing to generate inbetween stops where passengers can potentiall
 
 **stops type 5**
 ![](images/route-leg-annotation-node-convertOsmIdToLatLon.png "")
+
+The first Google Earth picture shows some stops close to the origin and the destination, but not so many in between. In the second picture the stops are equally spread along the route. The amount of stops is more reasonable for our use case than in the last three pictures.
 
 **stops type 1**
 
