@@ -10,7 +10,7 @@ We work with routing to generate inbetween stops where passengers can potentiall
 | 2          | route.leg.step.intersection.location             | 239    |
 | 3          | route.geometry.coordinates                       | 2612   |
 | 4          | route.leg.step.geometry.coordinates              | 2644   |
-| 5          | convertOsmIdToLatLong(route.leg.annotation.node) | 2612   |
+| 5          | convertOsmIdToLatLon(route.leg.annotation.node)  | 2612   |
 
 **stops type 1**
 ![](images/route-leg-step-maneuver-location.png "")
@@ -25,7 +25,7 @@ We work with routing to generate inbetween stops where passengers can potentiall
 ![](images/route-leg-step-geometry-coordinates.png "")
 
 **stops type 5**
-![](images/route-leg-annotation-node-convertOsmIdToLatLong.png "")
+![](images/route-leg-annotation-node-convertOsmIdToLatLon.png "")
 
 **stops type 1**
 
