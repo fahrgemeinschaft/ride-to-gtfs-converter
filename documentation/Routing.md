@@ -1,6 +1,6 @@
 # Routing tool evaluation
 
-We work with routing to generate inbetween stops where passengers can potentially join a ride. 3 tools will be evaluated using an example route from Berlin to Hamburg.
+We work with routing to generate inbetween stops where passengers can potentially join a ride. This must be coordinated with the driver to arrange an additional pickup or drop-off on the way. 3 tools will be evaluated using an example route from Berlin to Hamburg.
 
 ### OSRM
 
