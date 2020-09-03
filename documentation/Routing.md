@@ -2,7 +2,28 @@
 
 We work with routing to generate in between stops where passengers can potentially join a ride. This must be coordinated with the driver to arrange an additional pickup or drop-off on the way. 3 tools will be evaluated using an example ride from Berlin to Hamburg.
 
+**Overview**
+
+| service          | total distance | travel time | amount of stops | average distance between stops | request time | prices                                                                               |
+|------------------|----------------|-------------|-----------------|--------------------------------|--------------|--------------------------------------------------------------------------------------|
+| OSRM             | 280 km         | 3,1 h       | 32/239/2.644/.. | 8.766/1.173/106 m              | 6.200 ms     | free commercial usage                                                                |
+| GraphHopper      | 281 km         | 2,8 h       | 1431            | 196 m                          | 610 ms       | registration required, commercial use starting from 48 €/month for 1666 requests/day |
+| openrouteservice | 280 km         | 2,9 h       | ?/2086          | ?/134 m                        | 6.600 ms     | free commercial usage up to 2.000 requests/day                                       |
+
+Other pay services are provided by
+* Google Maps
+* HERE
+* Mapbox
+* Microsoft
+* TomTom
+* MapQuest
+* ArcGIS
+...
+
 ### OSRM
+
+* GitHub: [](https://github.com/Project-OSRM/osrm-backend)
+* API documentation: [](http://project-osrm.org/docs/v5.22.0/api/)
 
 The OSRM routing response has different collections of generated in between stops as listed in the table.
 
@@ -15,23 +36,25 @@ The OSRM routing response has different collections of generated in between stop
 | 5          | convertOsmIdToLatLon(route.leg.annotation.node)  | 2612   |
 
 **stops type 1**
-![](images/route-leg-step-maneuver-location.png "")
+![](images/osrm-route-leg-step-maneuver-location.png "")
 
 **stops type 2**
-![](images/route-leg-step-intersection-location.png "")
+![](images/osrm-route-leg-step-intersection-location.png "")
 
 **stops type 3**
-![](images/route-geometry-coordinates.png "")
+![](images/osrm-route-geometry-coordinates.png "")
 
 **stops type 4**
-![](images/route-leg-step-geometry-coordinates.png "")
+![](images/osrm-route-leg-step-geometry-coordinates.png "")
 
 **stops type 5**
-![](images/route-leg-annotation-node-convertOsmIdToLatLon.png "")
+![](images/osrm-route-leg-annotation-node-convertOsmIdToLatLon.png "")
 
 The first Google Earth picture shows some stops close to the origin and the destination, but not so many in between. In the second picture the stops are equally spread along the route. The amount of stops is more reasonable for our use case than in the last three pictures.
 
 **stops type 1**
+
+<font size="1">
 
 | coordinates                      | osm_type | extent                                           | osm_key | housenumber | city          | street                   | osm_value         | postcode | name                     | state       |
 |----------------------------------|----------|--------------------------------------------------|---------|-------------|---------------|--------------------------|-------------------|----------|--------------------------|-------------|
@@ -68,6 +91,11 @@ The first Google Earth picture shows some stops close to the origin and the dest
 | [9.9942354, 53.5506939]          | W        | [9.9939492, 53.5508649, 9.9942354, 53.5506939]   | highway |             | Hamburg       |                          | unclassified      | 20095    | Rathausmarkt             | Hamburg     |
 | [9.9936264, 53.5510823]          | W        | [9.9936264, 53.5510823, 9.9938776, 53.5509131]   | highway |             | Hamburg       |                          | unclassified      | 20095    | Rathausmarkt             | Hamburg     |
 
-### Graphhopper
+</font>
+
+### GraphHopper
 
 ### openrouteservice
+
+* GitHub: [](https://github.com/GIScience/openrouteservice)
+* API documentation: [](https://openrouteservice.org/dev/#/api-docs/directions/get)

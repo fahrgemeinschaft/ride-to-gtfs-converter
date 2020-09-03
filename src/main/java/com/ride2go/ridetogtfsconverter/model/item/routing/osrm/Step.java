@@ -15,7 +15,8 @@ public class Step {
 	@JsonProperty("driving_side")
 	private String drivingSide;
 
-	private Geometry geometry;
+	private String geometry;
+	//private Geometry geometry;
 
 	// travel time in seconds
 	private Float duration;
