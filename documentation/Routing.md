@@ -8,7 +8,7 @@ We work with routing to generate in between stops where passengers can potential
 |------------------|----------------|-------------|-----------------|--------------------------------|--------------|--------------------------------------------------------------------------------------|
 | OSRM             | 280 km         | 3,1 h       | 32/239/2.644/.. | 8.766/1.173/106 m              | 6.200 ms     | free commercial usage                                                                |
 | GraphHopper      | 281 km         | 2,8 h       | 1431            | 196 m                          | 610 ms       | registration required, commercial use starting from 48 €/month for 1666 requests/day |
-| openrouteservice | 280 km         | 2,9 h       | ?/2086          | ?/134 m                        | 6.600 ms     | free commercial usage up to 2.000 requests/day                                       |
+| openrouteservice | 280 km         | 2,9 h       | 27/2086         | 10.383/134 m                   | 6.600 ms     | free commercial usage up to 2.000 requests/day                                       |
 
 Other pay services are provided by
 * Google Maps
@@ -22,8 +22,8 @@ Other pay services are provided by
 
 ### OSRM
 
-* GitHub: [](https://github.com/Project-OSRM/osrm-backend)
-* API documentation: [](http://project-osrm.org/docs/v5.22.0/api/)
+* GitHub: [https://github.com/Project-OSRM/osrm-backend](https://github.com/Project-OSRM/osrm-backend)
+* API documentation: [http://project-osrm.org/docs/v5.22.0/api/](http://project-osrm.org/docs/v5.22.0/api/)
 
 The OSRM routing response has different collections of generated in between stops as listed in the table.
 
@@ -97,5 +97,5 @@ The first Google Earth picture shows some stops close to the origin and the dest
 
 ### openrouteservice
 
-* GitHub: [](https://github.com/GIScience/openrouteservice)
-* API documentation: [](https://openrouteservice.org/dev/#/api-docs/directions/get)
+* GitHub: [https://github.com/GIScience/openrouteservice](https://github.com/GIScience/openrouteservice)
+* API documentation: [https://openrouteservice.org/dev/#/api-docs/directions/get](https://openrouteservice.org/dev/#/api-docs/directions/get)
