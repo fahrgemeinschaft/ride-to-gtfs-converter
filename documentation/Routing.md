@@ -7,7 +7,7 @@ We work with routing to generate in between stops where passengers can potential
 | service          | total distance | travel time | amount of stops | average distance between stops | request time | prices                                                                               |
 |------------------|----------------|-------------|-----------------|--------------------------------|--------------|--------------------------------------------------------------------------------------|
 | OSRM             | 280 km         | 3,1 h       | 32/239/2.644/.. | 8.766/1.173/106 m              | 6.200 ms     | free commercial usage                                                                |
-| GraphHopper      | 281 km         | 2,8 h       | 1431            | 196 m                          | 610 ms       | registration required, commercial use starting from 48 €/month for 1666 requests/day |
+| GraphHopper      | 281 km         | 2,8 h       | 23/1432         | 12.204/196 m                   | 610 ms       | registration required, commercial use starting from 48 €/month for 1666 requests/day |
 | openrouteservice | 280 km         | 2,9 h       | 27/2086         | 10.383/134 m                   | 6.600 ms     | free commercial usage up to 2.000 requests/day                                       |
 
 Other pay services are provided by
@@ -94,6 +94,17 @@ The first Google Earth picture shows some stops close to the origin and the dest
 </font>
 
 ### GraphHopper
+
+| stops type | generated in                | amount |
+|------------|-----------------------------|--------|
+| 1          | paths-instructions-interval | 23     |
+| 2          | paths-points-coordinates    | 1432   |
+
+**stops type 1**
+![](images/gh-paths-instructions-interval.png "")
+
+**stops type 2**
+![](images/gh-paths-points-coordinates.png "")
 
 ### openrouteservice
 
