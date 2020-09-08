@@ -1,0 +1,176 @@
+@startuml
+
+class GeoJSONRouteResponse {
+type: String
+bbox: double[]
+}
+
+class GeoJSONIndividualRouteResponse {
+bbox: double[]
+type: String
+<b><color:green>geometry: JSONObject</color></b>
+}
+
+class GeoJSONSummary {
+wayPoints: List<Integer>
+ascent: Double
+descent: Double
+}
+
+class JSONSegment {
+distance: Double
+duration: Double
+detourfactor: Double
+percentage: Double
+avgspeed: Double
+ascent: Double
+descent: Double
+}
+
+class JSONStep {
+distance: Double
+duration: Double
+type: Integer
+instruction: String
+name: String
+exitNumber: Integer
+exitBearings: Integer[]
+<b><color:green>wayPoints: Integer[]</color></b>
+}
+
+
+class JSONStepManeuver {
+location: Double[]
+bearingBefore: Integer
+bearingAfter: Integer
+}
+
+class JSONSummary {
+distance: Double
+duration: Double
+ascent: Double
+descent: Double
+}
+
+class JSONExtra {
+values: List<List<Long>>
+}
+
+class JSONExtraSummary {
+value: double
+distance: double
+amount: double
+}
+
+class RouteWarning {
+warningCode: int
+warningMessage: String
+}
+
+class RouteResponseInfo {
+id: String
+attribution: String
+osmFileMD5Hash: String
+service: String
+timestamp: long
+systemMessage: String
+}
+
+class RouteRequest {
+id: String
+coordinates: List<List<Double>>
+profile: String
+preference: String
+format: String
+units: String
+language: String
+geometry: boolean
+instructions: boolean
+instructionsFormat: String
+roundaboutExits: boolean
+attributes: String[]
+maneuvers: boolean
+radiuses: Double[]
+bearings: Double[][]
+continueStraight: boolean
+elevation: boolean
+extraInfo: String[]
+optimized: boolean
+suppressWarnings: boolean
+geometrySimplify: boolean
+skipSegments: List<Integer>
+maximumSpeed: double
+}
+
+class RouteRequestOptions {
+avoidFeatures: String[]
+avoidBorders: String
+avoidCountries: String[]
+vehicleType: String
+avoidPolygons: JSONObject
+}
+
+class RequestProfileParams {
+}
+
+class RequestProfileParamsWeightings {
+steepnessDifficulty: Integer
+green: Float
+quiet: Float
+}
+
+class RequestProfileParamsRestrictions {
+length: Float
+hasLength: boolean
+width: Float
+height: Float
+axleload: Float
+weight: Float
+hazmat: boolean
+surfaceType: String
+trackType: String
+smoothnessType: String
+maximumSlopedKerb: Float
+maximumIncline: Integer
+minimumWidth: Float
+}
+
+class RouteRequestRoundTripOptions {
+length: Float
+points: Integer
+seed: Long
+}
+
+class RouteRequestAlternativeRoutes {
+targetCount: Integer
+weightFactor: Double
+shareFactor: Double
+}
+
+class EngineInfo {
+version: String
+buildDate: String
+graphDate: String
+}
+
+GeoJSONRouteResponse o-- "0..*" GeoJSONIndividualRouteResponse : features
+GeoJSONRouteResponse o-- "0..1" RouteResponseInfo : metadata
+GeoJSONIndividualRouteResponse o-- "0..1" GeoJSONSummary : properties
+GeoJSONSummary o-- "0..*" JSONSegment : segments
+GeoJSONSummary o-- "0..1" JSONSummary : summary
+GeoJSONSummary o-- "0..1" "Map<String, JSONExtra>" : extras
+"Map<String, JSONExtra>" .. JSONExtra
+GeoJSONSummary o-- "0..*" RouteWarning : warnings
+JSONSegment o-- "0..*" JSONStep : steps
+JSONStep o-- "0..1" JSONStepManeuver : maneuver
+JSONExtra o-- "0..*" JSONExtraSummary : summary
+RouteResponseInfo o-- "0..1" RouteRequest : query
+RouteResponseInfo o-- "0..1" EngineInfo : engine
+RouteRequest o-- "0..1" RouteRequestOptions : options
+RouteRequest o-- "0..1" RouteRequestAlternativeRoutes : alternativeRoutes
+RouteRequestOptions o-- "0..1" RequestProfileParams : profileParams
+RouteRequestOptions o-- "0..1" RouteRequestRoundTripOptions : roundTrip
+RequestProfileParams o-- "0..1" RequestProfileParamsWeightings : weightings
+RequestProfileParams o-- "0..1" RequestProfileParamsRestrictions : restrictions
+
+@enduml

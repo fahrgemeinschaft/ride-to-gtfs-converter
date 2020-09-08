@@ -130,4 +130,8 @@ With the help of Photon we get a view where the routing points are located.
 | 1                  | features.properties.segments.steps.way_point | 27               | instruction point   |
 | 2                  | features.geometry.coordinate                 | 2086             | route shaping point |
 
+**response model**   
+[<img src="images/class_diagrams/routing_ors_response_model.png" width="60%"/>](images/class_diagrams/routing_ors_response_model.png)
+
+
 [and the example result as JSON](pages/routing_ors_response_json.md)
