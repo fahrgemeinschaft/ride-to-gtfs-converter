@@ -1,0 +1,52 @@
+@startuml
+
+class RouteResponse {
+}
+
+class RouteResponsePath {
+distance: Double
+time: Long
+ascend: Double
+descend: Double
+pointsEncoded: Boolean
+bbox: List<Double>
+}
+
+class ResponseInfo {
+copyrights: List<String>
+took: Double
+}
+
+class ResponseCoordinates {
+}
+
+class ResponseCoordinatesArray {
+}
+
+class ResponseInstructions {
+}
+
+class ResponseInstruction {
+text: String
+streetName: String
+distance: Double
+time: Integer
+<b><color:green>interval: List<Integer></color></b>
+sign: Integer
+annotationText: String
+annotationImportance: Integer
+exitNumber: Integer
+turnAngle: Double
+}
+
+RouteResponse o-- "0..*" RouteResponsePath : paths
+RouteResponse o-- "0..1" ResponseInfo : info
+RouteResponsePath o-- "0..1" ResponseCoordinates : points
+RouteResponsePath o-- "0..1" ResponseCoordinates : snappedWaypoints
+RouteResponsePath o-- "0..1" ResponseInstructions : instructions
+ResponseCoordinates o-- "0..1" ResponseCoordinatesArray : <b><color:green>coordinates</color></b>
+ResponseCoordinatesArray <|-- "ArrayList<List>"
+ResponseInstructions <|-- "ArrayList<ResponseInstruction>"
+"ArrayList<ResponseInstruction>" .. ResponseInstruction
+
+@enduml
