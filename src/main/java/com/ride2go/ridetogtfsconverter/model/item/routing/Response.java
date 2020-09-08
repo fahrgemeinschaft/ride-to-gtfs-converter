@@ -7,7 +7,11 @@ import lombok.Data;
 @Data
 public class Response {
 
-	private List<Location> generatedStops;
+	private List<Location> instructionPoints;
+
+	private List<Location> intersectionPoints;
+
+	private List<Location> routeShapingPoints;
 
 	private Float duration;
 }

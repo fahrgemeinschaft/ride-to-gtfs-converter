@@ -5,7 +5,9 @@ import lombok.Data;
 @Data
 public class Location {
 
-	private Coordinate coordinate;
+	private Coordinates coordinate;
 
-	private String name;
+	private String address;
+
+	private Float duration;
 }
