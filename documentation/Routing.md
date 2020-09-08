@@ -47,7 +47,7 @@ The OSRM routing response has different collections of generated routing points 
 [<img src="images/maps/routing_osrm_route-leg-step-intersection-location.png" width="60%"/>](images/maps/routing_osrm_route-leg-step-intersection-location.png)
 
 **routing points type 3**   
-[<img src="images/maps/osrm-route-geometry-coordinate.png" width="60%"/>](images/maps/osrm-route-geometry-coordinate.png)
+[<img src="images/maps/routing_osrm_route-geometry-coordinate.png" width="60%"/>](images/maps/routing_osrm_route-geometry-coordinate.png)
 
 **routing points type 4**   
 [<img src="images/maps/routing_osrm_route-leg-step-geometry-coordinate.png" width="60%"/>](images/maps/routing_osrm_route-leg-step-geometry-coordinate.png)
