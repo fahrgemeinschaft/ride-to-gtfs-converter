@@ -14,6 +14,7 @@ public class Route {
 	@JsonProperty("weight_name")
 	private String weightName;
 
+	// private String geometry;
 	private Geometry geometry;
 
 	private Float weight;
