@@ -15,11 +15,11 @@ import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
 
 public abstract class RoutingService {
 
-	private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RoutingService.class);
 
-	private static ObjectMapper objectMapper = new ObjectMapper();
+	private static final ObjectMapper objectMapper = new ObjectMapper();
 
-	abstract Response calculateRoute(Request request);
+	public abstract Response calculateRoute(Request request);
 
 	protected void check(Request request) throws RoutingException {
 		if (request == null) {
@@ -49,12 +49,42 @@ public abstract class RoutingService {
 		return clientResponse;
 	}
 
+	protected static void nullCheck(Object o, String message) {
+		if (o == null) {
+			LOG.warn(message);
+		}
+	}
+
+	protected static String getAddress(String address, final String message) {
+		if (address != null) {
+			address = address.trim().replaceFirst("^\\-$", "");
+			if (!address.isEmpty()) {
+				return address;
+			} else {
+				LOG.warn(message + "address is empty");
+			}
+		} else {
+			LOG.warn(message + "address is null");
+		}
+		return null;
+	}
+
+	public void changeRelativeToAbsoluteDurations(Response response) {
+		// todo
+	}
+
+	public void validatePoints(Response response) {
+		// todo:
+		// null check
+		// duplicate check
+	}
+
 	protected static String convertToJSON(Object o) {
 		String json = null;
 		try {
 			json = objectMapper.writeValueAsString(o);
 		} catch (JsonProcessingException e) {
-			log.warn("JSON processing problem: " + e.getMessage());
+			LOG.warn("JSON processing problem: " + e.getMessage());
 		}
 		return json;
 	}

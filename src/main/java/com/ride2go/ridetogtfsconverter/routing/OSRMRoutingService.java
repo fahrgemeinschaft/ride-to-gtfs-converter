@@ -1,12 +1,17 @@
 package com.ride2go.ridetogtfsconverter.routing;
 
 import static com.ride2go.ridetogtfsconverter.routing.OSRMRoutingParameter.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.client.ClientResponse;
+
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
-import com.ride2go.ridetogtfsconverter.model.item.routing.Coordinates;
+import com.ride2go.ridetogtfsconverter.model.item.routing.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
@@ -15,6 +20,7 @@ import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Geometry;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Intersection;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Leg;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Maneuver;
+import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Measures;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.OSRMResponse;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Route;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Step;
@@ -23,9 +29,15 @@ public class OSRMRoutingService extends RoutingService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OSRMRoutingService.class);
 
-	private static final String ELEMENT = "OSRM response body element ";
+	private static final String MESSAGE = "OSRM response body element ";
 
-	public Response calculateRoute(Request request) {
+	private enum Option {
+		ONE, TWO, THREE
+	}
+
+	private Option routeShapingPointsOption = Option.THREE;
+
+	public Response calculateRoute(final Request request) {
 		Response response = new Response();
 		try {
 			check(request);
@@ -49,35 +61,7 @@ public class OSRMRoutingService extends RoutingService {
 			if (route == null) {
 				throw new RoutingException("response route is null");
 			}
-			getRouteGeometryCoordinates(route, response); // 3. point list
-			List<Leg> legs = route.getLegs();
-			if (legs != null) {
-				for (Leg leg : legs) {
-					if (leg != null) {
-						List<Step> steps = leg.getSteps();
-						if (steps != null) {
-							for (Step step : steps) {
-								if (step != null) {
-									getRouteLegStepManeuverLocation(step, response); // 1. point list
-									getRouteLegStepIntersectionLocations(step, response); // 2. point list
-									// getRouteLegStepGeometryCoordinates(step, response); // 4. point list
-								} else {
-									LOG.warn(ELEMENT + "route.leg.step is null");
-								}
-							}
-						} else {
-							LOG.warn(ELEMENT + "route.leg.steps is null");
-						}
-						// getRouteLegAnnotationNodesAndConvertOsmIdsToLatLon(leg, response); // 5. point list
-					} else {
-						LOG.warn(ELEMENT + "route.leg is null");
-					}
-				}
-			} else {
-				LOG.warn(ELEMENT + "route.legs is null");
-			}
-		} catch (NullPointerException e) {
-			LOG.error("OSRM routing error! ", e);
+			convert(route, response);
 		} catch (RoutingException e) {
 			LOG.error("OSRM routing error: " + e.getMessage());
 		} catch (Exception e) {
@@ -86,167 +70,305 @@ public class OSRMRoutingService extends RoutingService {
 		return response;
 	}
 
-	private static String getUri(Request request) {
-		String uri = new StringBuilder()
-			    .append(BASE_URI)
-			    .append(request.getOrigin().getLongitude())
-			    .append(",")
-			    .append(request.getOrigin().getLatitude())
-			    .append(";")
-			    .append(request.getDestination().getLongitude())
-			    .append(",")
-			    .append(request.getDestination().getLatitude())
-			    .append("?steps=")
-			    .append(STEPS_VALUE)
-			    .append("&overview=")
-			    .append(OVERVIEW_VALUE)
-			    .append("&annotations=")
-			    .append(ANNOTATIONS_VALUE)
-			    .append("&geometries=")
-			    .append(GEOMETRIES_VALUE)
-			    .toString();
-		return uri;
+	private static String getUri(final Request request) {
+		return new StringBuilder()
+				.append(BASE_URI)
+				.append(request.getOrigin().getLongitude())
+				.append(",")
+				.append(request.getOrigin().getLatitude())
+				.append(";")
+				.append(request.getDestination().getLongitude())
+				.append(",")
+				.append(request.getDestination().getLatitude())
+				.append("?steps=")
+				.append(STEPS_VALUE)
+				.append("&overview=")
+				.append(OVERVIEW_VALUE)
+				.append("&annotations=")
+				.append(ANNOTATIONS_VALUE)
+				.append("&geometries=")
+				.append(GEOMETRIES_VALUE)
+				.toString();
 	}
 
-	private static void getRouteLegStepManeuverLocation(Step step, Response response) {
-		Maneuver maneuver = step.getManeuver();
-		if (maneuver == null) {
-			LOG.warn(ELEMENT + "route.leg.step.maneuver is null");
-			return;
-		}
-		List<Double> location = maneuver.getLocation();
-		if (location == null) {
-			LOG.warn(ELEMENT + "route.leg.step.maneuver.location is null");
-			return;
-		}
-		if (location.get(1) == null) {
-			LOG.warn(ELEMENT + "route.leg.step.maneuver.location.lat is null");
-			return;
-		}
-		if (location.get(0) == null) {
-			LOG.warn(ELEMENT + "route.leg.step.maneuver.location.lon is null");
-			return;
-		}
-		Location point = new Location(location.get(1), location.get(0));
-		String address = step.getName();
-		if (address != null) {
-			address = address.trim();
-			if (!address.isEmpty()) {
-				point.setAddress(step.getName());
-			} else {
-				LOG.warn(ELEMENT + "route.leg.step.address is empty");
+	private void convert(final Route route, Response response) {
+		List<Location> routeShapingPoints1 = new ArrayList<>();
+		List<Location> routeShapingPoints2 = new ArrayList<>();
+		List<Location> routeShapingPoints3 = new ArrayList<>();
+
+		routeShapingPoints1 = getRouteGeometryCoordinates(route);
+		List<Leg> legs = route.getLegs();
+		if (legs != null) {
+			for (Leg leg : legs) {
+				if (leg != null) {
+					List<Step> steps = leg.getSteps();
+					if (steps != null) {
+						for (Step step : steps) {
+							if (step != null) {
+								response.addDrivingInstructionPoint(
+										getRouteLegStepManeuverLocation(step));
+								response.addStreetIntersectionPoints(
+										getRouteLegStepIntersectionLocations(step));
+								routeShapingPoints2.addAll(
+										getRouteLegStepGeometryCoordinates(step));
+							} else {
+								LOG.warn(MESSAGE + "route.leg.step is null");
+							}
+						}
+					} else {
+						LOG.warn(MESSAGE + "route.leg.steps are null");
+					}
+					routeShapingPoints3.addAll(
+							getRouteLegAnnotationNodesAndConvertOsmIdsToLatLon(leg));
+				} else {
+					LOG.warn(MESSAGE + "route.leg is null");
+				}
 			}
 		} else {
-			LOG.warn(ELEMENT + "route.leg.step.address is null");
+			LOG.warn(MESSAGE + "route.legs are null");
 		}
-		if (step.getDistance() != null) {
-			point.setDistance(step.getDistance());
-		} else {
-			LOG.warn(ELEMENT + "route.leg.step.distance is null");
+		switch (routeShapingPointsOption) {
+		case ONE:
+			response.setRouteShapingPoints(routeShapingPoints1);
+			break;
+		case TWO:
+			response.setRouteShapingPoints(routeShapingPoints2);
+			break;
+		case THREE:
+			addGeoCoordinates(routeShapingPoints3, routeShapingPoints1);
+			response.setRouteShapingPoints(routeShapingPoints3);
+			break;
+		default:
+			LOG.warn("No route shaping point list selected.");
+			break;
 		}
-		if (step.getDuration() != null) {
-			point.setDuration(step.getDuration());
-		} else {
-			LOG.warn(ELEMENT + "route.leg.step.duration is null");
-		}
-		response.addInstructionPoint(point);
+
+		response.setDistance(
+				getDistance(route, MESSAGE + "route."));
+		response.setDuration(
+				getDuration(route, MESSAGE + "route."));
 	}
 
-	private static void getRouteLegStepIntersectionLocations(Step step, Response response) {
+	private static Location getRouteLegStepManeuverLocation(final Step step) {
+		Maneuver maneuver = step.getManeuver();
+		boolean geoCoordinatesExist = true;
+		List<Double> location = null;
+		if (maneuver == null) {
+			LOG.warn(MESSAGE + "route.leg.step.maneuver is null");
+			geoCoordinatesExist = false;
+		} else {
+			location = maneuver.getLocation();
+			if (location == null) {
+				LOG.warn(MESSAGE + "route.leg.step.maneuver.location is null");
+				geoCoordinatesExist = false;
+			} else {
+				if (location.get(0) == null) {
+					LOG.warn(MESSAGE + "route.leg.step.maneuver.location longitude is null");
+					geoCoordinatesExist = false;
+				}
+				if (location.get(1) == null) {
+					LOG.warn(MESSAGE + "route.leg.step.maneuver.location latitude is null");
+					geoCoordinatesExist = false;
+				}
+			}
+		}
+		Location point = geoCoordinatesExist ? new Location(location.get(1), location.get(0)) : new Location(null);
+		point.setAddress(
+				getAddress(step.getName(), MESSAGE + "route.leg.step."));
+		point.setDistance(
+				getDistance(step, MESSAGE + "route.leg.step."));
+		point.setDuration(
+				getDuration(step, MESSAGE + "route.leg.step."));
+		return point;
+	}
+
+	private static List<Location> getRouteLegStepIntersectionLocations(final Step step) {
+		List<Location> points = new ArrayList<>();
 		List<Intersection> intersections = step.getIntersections();
 		if (intersections == null) {
-			LOG.warn(ELEMENT + "route.leg.step.intersections is null");
-			return;
+			LOG.warn(MESSAGE + "route.leg.step.intersections are null");
+			return points;
 		}
 		List<Double> location;
 		Location point;
 		for (Intersection intersection : intersections) {
 			if (intersection == null) {
-				LOG.warn(ELEMENT + "route.leg.step.intersection is null");
+				LOG.warn(MESSAGE + "route.leg.step.intersection is null");
 				continue;
 			}
 			location = intersection.getLocation();
 			if (location == null) {
-				LOG.warn(ELEMENT + "route.leg.step.intersection.location is null");
-				continue;
-			}
-			if (location.get(1) == null) {
-				LOG.warn(ELEMENT + "route.leg.step.intersection.location.lat is null");
+				LOG.warn(MESSAGE + "route.leg.step.intersection.location is null");
 				continue;
 			}
 			if (location.get(0) == null) {
-				LOG.warn(ELEMENT + "route.leg.step.intersection.location.lon is null");
+				LOG.warn(MESSAGE + "route.leg.step.intersection.location longitude is null");
+				continue;
+			}
+			if (location.get(1) == null) {
+				LOG.warn(MESSAGE + "route.leg.step.intersection.location latitude is null");
 				continue;
 			}
 			point = new Location(location.get(1), location.get(0));
-			response.addIntersectionPoint(point);
+			points.add(point);
 		}
+		return points;
 	}
 
-	private static void getRouteGeometryCoordinates(Route route, Response response) {
+	private static List<Location> getRouteGeometryCoordinates(final Route route) {
 		Geometry geometry = route.getGeometry();
-		getGeometryCoordinates(geometry, response, "route.");
+		return getGeometryCoordinates(geometry, MESSAGE + "route.");
 	}
 
-	private static void getRouteLegStepGeometryCoordinates(Step step, Response response) {
+	private static List<Location> getRouteLegStepGeometryCoordinates(final Step step) {
 		Geometry geometry = step.getGeometry();
-		getGeometryCoordinates(geometry, response, "route.leg.step.");
+		return getGeometryCoordinates(geometry, MESSAGE + "route.leg.step.");
 	}
 
-	private static void getGeometryCoordinates(Geometry geometry, Response response, String elementValuePart) {
+	private static List<Location> getGeometryCoordinates(final Geometry geometry, final String message) {
+		List<Location> points = new ArrayList<>();
 		if (geometry == null) {
-			LOG.warn(ELEMENT + elementValuePart + "geometry is null");
-			return;
+			LOG.warn(message + "geometry is null");
+			return points;
 		}
 		List<List<Double>> coordinates = geometry.getCoordinates();
 		if (coordinates == null) {
-			LOG.warn(ELEMENT + elementValuePart + "geometry.coordinates is null");
-			return;
+			LOG.warn(message + "geometry.coordinates are null");
+			return points;
 		}
 		Location point;
-		for (List<Double> coord : coordinates) {
-			if (coord == null) {
-				LOG.warn(ELEMENT + elementValuePart + "geometry.coordinate is null");
+		for (List<Double> coordinate : coordinates) {
+			if (coordinate == null) {
+				LOG.warn(message + "geometry.coordinate is null");
 				continue;
 			}
-			if (coord.get(1) == null) {
-				LOG.warn(ELEMENT + elementValuePart + "geometry.coordinate.lat is null");
+			if (coordinate.get(0) == null) {
+				LOG.warn(message + "geometry.coordinate longitude is null");
 				continue;
 			}
-			if (coord.get(0) == null) {
-				LOG.warn(ELEMENT + elementValuePart + "geometry.coordinate.lon is null");
+			if (coordinate.get(1) == null) {
+				LOG.warn(message + "geometry.coordinate latitude is null");
 				continue;
 			}
-			point = new Location(coord.get(1), coord.get(0));
-			response.addRouteShapingPoint(point);
+			point = new Location(coordinate.get(1), coordinate.get(0));
+			points.add(point);
+		}
+		return points;
+	}
+
+	private static List<Location> getRouteLegAnnotationNodesAndConvertOsmIdsToLatLon(final Leg leg) {
+		Annotation annotation = leg.getAnnotation();
+		boolean annotationPointsExist = true;
+		List<Long> nodes = null;
+		List<Float> distances = null;
+		List<Float> durations = null;
+		if (annotation == null) {
+			LOG.warn(MESSAGE + "route.leg.annotation is null");
+			annotationPointsExist = false;
+		} else {
+			nodes = annotation.getNodes();
+			if (nodes == null) {
+				LOG.warn(MESSAGE + "route.leg.annotation.nodes are null");
+				annotationPointsExist = false;
+			} else if (nodes.size() == 0) {
+				LOG.warn(MESSAGE + "route.leg.annotation.nodes is an empty list");
+				annotationPointsExist = false;
+			}
+			distances = annotation.getDistance();
+			if (distances == null) {
+				LOG.warn(MESSAGE + "route.leg.annotation.distances are null");
+				annotationPointsExist = false;
+			}
+			durations = annotation.getDuration();
+			if (durations == null) {
+				LOG.warn(MESSAGE + "route.leg.annotation.durations are null");
+				annotationPointsExist = false;
+			}
+			if (annotationPointsExist) {
+				distances.add(0, 0F);
+				durations.add(0, 0F);
+				if (nodes.size() != distances.size()
+						|| nodes.size() != durations.size()) {
+					LOG.warn(MESSAGE + "route.leg.annotation lists have different sizes: {} {} {}",
+							nodes.size(), distances.size(), durations.size());
+					annotationPointsExist = false;
+				}
+			}
+		}
+		if (annotationPointsExist) {
+			return getRouteLegAnnotationPoints(nodes, distances, durations);
+		} else {
+			return Arrays.asList(getRouteLegPoint(leg));
 		}
 	}
 
-	private static void getRouteLegAnnotationNodesAndConvertOsmIdsToLatLon(Leg leg, Response response) {
-		Annotation annotation = leg.getAnnotation();
-		if (annotation == null) {
-			LOG.warn(ELEMENT + "route.leg.annotation is null");
-			return;
-		}
-		List<Long> nodes = annotation.getNodes();
-		if (nodes == null) {
-			LOG.warn(ELEMENT + "route.leg.annotation.nodes is null");
-			return;
-		}
-		Coordinates coordinates;
+	private static List<Location> getRouteLegAnnotationPoints(final List<Long> nodes, final List<Float> distances,
+			final List<Float> durations) {
+		List<Location> points = new ArrayList<>();
+		Measures measures = new Measures();
 		Location point;
-		for (Long node : nodes) {
-			if (node == null) {
-				LOG.warn(ELEMENT + "route.leg.annotation.node is null");
-				continue;
+		for (int i = 0; i < nodes.size(); i++) {
+			nullCheck(nodes.get(i), MESSAGE + "route.leg.annotation.node is null");
+			measures.setDistance(distances.get(i));
+			measures.setDuration(durations.get(i));
+
+			point = new Location(null);
+			point.setOsmNodeId(nodes.get(i));
+			point.setDistance(
+					getDistance(measures, MESSAGE + "route.leg.annotation."));
+			point.setDuration(
+					getDuration(measures, MESSAGE + "route.leg.annotation."));
+			points.add(point);
+		}
+		return points;
+	}
+
+	private static Location getRouteLegPoint(final Leg leg) {
+		Location point = new Location(null);
+		point.setDistance(
+				getDistance(leg, MESSAGE + "route.leg."));
+		point.setDuration(
+				getDuration(leg, MESSAGE + "route.leg."));
+		return point;
+	}
+
+	private static void addGeoCoordinates(List<Location> routeShapingPoints3, final List<Location> routeShapingPoints1) {
+		if (routeShapingPoints3.size() == routeShapingPoints1.size()) {
+			for (int i = 0; i < routeShapingPoints3.size(); i++) {
+				routeShapingPoints3.get(i).setGeoCoordinates(
+						routeShapingPoints1.get(i).getGeoCoordinates());
 			}
-			coordinates = OSMNodeService.convertIdToLatLon(node);
-			if (coordinates != null) {
-				point = new Location(coordinates);
-				response.addRouteShapingPoint(point);
-			} else {
-				LOG.warn(ELEMENT + "route.leg.annotation.node converted to lat and lon is null");
+		} else {
+			LOG.warn("Convert OSM node ids to latitude and longitude");
+			Long osmNodeId;
+			GeoCoordinates geoCoordinates;
+			for (Location point : routeShapingPoints3) {
+				osmNodeId = point.getOsmNodeId();
+				if (osmNodeId != null) {
+					geoCoordinates = OSMNodeService.convertIdToLatLon(osmNodeId);
+					if (geoCoordinates != null) {
+						point.setGeoCoordinates(geoCoordinates);
+					}
+				}
 			}
 		}
+	}
+
+	private static Double getDistance(final Measures measures, final String message) {
+		if (measures.getDistance() == null) {
+			LOG.warn(message + "distance is null");
+			return null;
+		}
+		return Double.valueOf(
+				measures.getDistance());
+	}
+
+	private static Double getDuration(final Measures measures, final String message) {
+		if (measures.getDuration() == null) {
+			LOG.warn(message + "duration is null");
+			return null;
+		}
+		return Double.valueOf(
+				measures.getDuration());
 	}
 }
