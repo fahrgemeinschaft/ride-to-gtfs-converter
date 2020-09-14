@@ -63,8 +63,10 @@ public class GHRoutingService extends RoutingService {
 	}
 
 	private void convert(final RouteResponsePath path, Response response) {
-		response.setRouteShapingPoints(getPathPointsCoordinates(path));
-		response.setDrivingInstructionPoints(getPathInstructions(path, response.getRouteShapingPoints()));
+		response.setRouteShapingPoints(
+				getPathPointsCoordinates(path));
+		response.setDrivingInstructionPoints(
+				getPathInstructions(path, response.getRouteShapingPoints()));
 
 		nullCheck(path.getDistance(), MESSAGE + "path.distance is null");
 		response.setDistance(
