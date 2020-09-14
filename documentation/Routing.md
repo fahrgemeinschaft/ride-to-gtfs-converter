@@ -1,14 +1,16 @@
 # Routing tool evaluation
 
-We work with routing to generate additional in between stops where passengers can potentially join a ride. This must always be coordinated with the driver, whether it is a scheduled or a generated stop. This way additional pickups or drop-offs can be arranged. We also want to use routing points to shape the route. They will be saved in GTFS shapes.txt. In the following three tools will be evaluated using an example ride from Berlin to Hamburg.
+We work with routing to generate additional in between stops where passengers can potentially join a ride. This must always be coordinated with the driver, whether it is a scheduled or a generated stop. This way additional pickups or drop-offs can be arranged. We also want to use routing points to shape the route. They will be saved in GTFS shapes.txt. While we need at least geo coordinates, address and time information for a GTFS stop, a GTFS route shaping point only requires the geo coordinates.
+
+In the following three tools will be evaluated using an example ride from Berlin to Hamburg.
 
 **Overview**
 
-| service          | total distance      | travel time      | amount of points | average distance between points      | request time      | prices                                                                               |
-|------------------|--------------------:|-----------------:|------------------|-------------------------------------:|------------------:|--------------------------------------------------------------------------------------|
-| OSRM             | 280&nbsp;km         | 3,1&nbsp;h       | 32/239/2.644/..  | 8.766/1.173/106&nbsp;m               | 6.200&nbsp;ms     | free commercial usage                                                                |
-| GraphHopper      | 281&nbsp;km         | 2,8&nbsp;h       | 23/1432          | 12.204/196&nbsp;m                    | 610&nbsp;ms       | registration required, commercial use starting from 48 €/month for 1666 requests/day |
-| openrouteservice | 280&nbsp;km         | 2,9&nbsp;h       | 27/2086          | 10.383/134&nbsp;m                    | 6.600&nbsp;ms     | free commercial usage up to 2.000 requests/day                                       |
+| service          | total distance      | travel time      | amount of points | average distance between points      | request time      | prices                                                                                |
+|------------------|--------------------:|-----------------:|------------------|-------------------------------------:|------------------:|---------------------------------------------------------------------------------------|
+| OSRM             | 280&nbsp;km         | 3,1&nbsp;h       | 32/239/2.644/..  | 8.766/1.173/106&nbsp;m               | 6.200&nbsp;ms     | free commercial usage                                                                 |
+| GraphHopper      | 281&nbsp;km         | 2,8&nbsp;h       | 23/1432          | 12.204/196&nbsp;m                    | 610&nbsp;ms       | registration required, commercial use starting from 48 €/month for 1.666 requests/day |
+| openrouteservice | 280&nbsp;km         | 2,9&nbsp;h       | 27/2086          | 10.383/134&nbsp;m                    | 6.600&nbsp;ms     | registration required, free commercial usage up to 2.000 requests/day                 |
 
 Other pay services are provided by
 * Google Maps
@@ -17,7 +19,7 @@ Other pay services are provided by
 * Microsoft
 * TomTom
 * MapQuest
-* ArcGIS
+* ArcGIS   
 ...
 
 ### OSRM
@@ -27,41 +29,41 @@ Other pay services are provided by
 
 The OSRM routing response has different collections of generated routing points as listed in the table.
 
-| routing point type | generated in                                     | amount of points | description         |
-|--------------------|--------------------------------------------------|-----------------:|---------------------|
-| 1                  | route.leg.step.maneuver.location                 | 32               | instruction point   |
-| 2                  | route.leg.step.intersection.location             | 239              | intersection point  |
-| 3                  | route.geometry.coordinate                        | 2612             | route shaping point |
-| 4                  | route.leg.step.geometry.coordinate               | 2644             | route shaping point |
-| 5                  | convertOsmIdToLatLon(route.leg.annotation.node)  | 2612             | route shaping point |
+| routing point type        | generated in                                             | amount of points |
+|---------------------------|----------------------------------------------------------|-----------------:|
+| driving instruction point | route.leg.step.maneuver.location                         | 32               |
+| street intersection point | route.leg.step.intersection.location                     | 239              |
+| route shaping point (1)   | route.geometry.coordinate                                | 2612             |
+| route shaping point (2)   | route.leg.step.geometry.coordinate                       | 2644             |
+| route shaping point (3)   | route.leg.annotation.node with OSM id instead of lat,lon | 2612             |
 
 **response model**   
 [<img src="images/class_diagrams/routing_osrm_response_model.png" width="40%"/>](images/class_diagrams/routing_osrm_response_model.png)
 
 [and the example result as JSON](pages/routing_osrm_response_json.md)
 
-**routing points type 1**   
+**driving instruction points**   
 [<img src="images/maps/routing_osrm_route-leg-step-maneuver-location.png" width="60%"/>](images/maps/routing_osrm_route-leg-step-maneuver-location.png)
 
-**routing points type 2**   
+**street intersection points**   
 [<img src="images/maps/routing_osrm_route-leg-step-intersection-location.png" width="60%"/>](images/maps/routing_osrm_route-leg-step-intersection-location.png)
 
-**routing points type 3**   
+**route shaping points (1)**   
 [<img src="images/maps/routing_osrm_route-geometry-coordinate.png" width="60%"/>](images/maps/routing_osrm_route-geometry-coordinate.png)
 
-**routing points type 4**   
+**route shaping points (2)**   
 [<img src="images/maps/routing_osrm_route-leg-step-geometry-coordinate.png" width="60%"/>](images/maps/routing_osrm_route-leg-step-geometry-coordinate.png)
 
-**routing points type 5**   
+**route shaping points (3)**   
 [<img src="images/maps/routing_osrm_route-leg-annotation-node-convertOsmIdToLatLon.png" width="60%"/>](images/maps/routing_osrm_route-leg-annotation-node-convertOsmIdToLatLon.png.png)
 
-The first Google Earth picture shows all the routing points where direction is changing. A lot of them are close to the origin and the destination, but not so many in between. In the second picture the intersection points are more equally spread along the route. And where routes are crossing there are possibilities to enter/exit rides. Unfortunately intersection points don't have a duration between two like the direction points and this is required for GTFS stops. To calculate them separately might be too time-consuming.
+The first Google Earth picture shows all the routing points where direction is changing. A lot of them are close to the origin and the destination, but not so many in between. In the second picture the street intersection points are more equally spread along the route. And where routes are crossing there are possibilities to enter/exit rides. Unfortunately intersection points don't have a duration between two like the direction points and this is required for GTFS stops. To calculate them separately might be too time-consuming.
 
 The last three pictures include all the in between points for drawing the route. This can be used for the GTFS shapes.
 
 With the help of Photon we get a view where the routing points are located.
 
-**routing points type 1**
+**driving instruction points**
 
 
 | longitude,latitude             | osm _key | house no. | city          | street                   | osm_value         | post-code | name                     | state       |
@@ -104,20 +106,20 @@ With the help of Photon we get a view where the routing points are located.
 
 * GitHub: [https://github.com/graphhopper/directions-api-clients/tree/master/java](https://github.com/graphhopper/directions-api-clients/tree/master/java)
 
-| routing point type | generated in                | amount of points | description         |
-|--------------------|-----------------------------|-----------------:|---------------------|
-| 1                  | paths.instructions.interval | 23               | instruction point   |
-| 2                  | paths.points.coordinates    | 1432             | route shaping point |
+| routing point type        | generated in              | amount of points |
+|---------------------------|---------------------------|-----------------:|
+| driving instruction point | path.instruction.interval | 23               |
+| route shaping point       | path.points.coordinate    | 1432             |
 
 **response model**   
 [<img src="images/class_diagrams/routing_gh_response_model.png" width="30%"/>](images/class_diagrams/routing_gh_response_model.png)
 
 [and the example result as JSON](pages/routing_gh_response_json.md)
 
-**routing points type 1**   
+**driving instruction points**   
 [<img src="images/maps/routing_gh_paths-instructions-interval.png" width="60%"/>](images/maps/routing_gh_paths-instructions-interval.png)
 
-**routing points type 2**   
+**route shaping points**   
 [<img src="images/maps/routing_gh_paths-points-coordinates.png" width="60%"/>](images/maps/routing_gh_paths-points-coordinates.png)
 
 ### openrouteservice
@@ -125,10 +127,10 @@ With the help of Photon we get a view where the routing points are located.
 * GitHub: [https://github.com/GIScience/openrouteservice](https://github.com/GIScience/openrouteservice)
 * API documentation: [https://openrouteservice.org/dev/#/api-docs/directions/get](https://openrouteservice.org/dev/#/api-docs/directions/get)
 
-| routing point type | generated in                                 | amount of points | description         |
-|--------------------|----------------------------------------------|-----------------:|---------------------|
-| 1                  | features.properties.segments.steps.way_point | 27               | instruction point   |
-| 2                  | features.geometry.coordinate                 | 2086             | route shaping point |
+| routing point type        | generated in                             | amount of points |
+|---------------------------|------------------------------------------|-----------------:|
+| driving instruction point | feature.properties.segment.step.waypoint | 27               |
+| route shaping point       | feature.geometry.coordinate              | 2086             |
 
 **response model**   
 [<img src="images/class_diagrams/routing_ors_response_model.png" width="60%"/>](images/class_diagrams/routing_ors_response_model.png)
