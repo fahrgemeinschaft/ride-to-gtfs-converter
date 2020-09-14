@@ -8,25 +8,37 @@ import lombok.Data;
 @Data
 public class Response {
 
-	private List<Location> instructionPoints = new ArrayList<>();
+	private List<Location> drivingInstructionPoints = new ArrayList<>();
 
-	private List<Location> intersectionPoints = new ArrayList<>();
+	private List<Location> streetIntersectionPoints = new ArrayList<>();
 
 	private List<Location> routeShapingPoints = new ArrayList<>();
 
-	private Float duration;
+	private Double duration;
 
-	private Float distance;
+	private Double distance;
 
-	public void addInstructionPoint(Location instructionPoint) {
-		instructionPoints.add(instructionPoint);
+	public void addDrivingInstructionPoint(Location drivingInstructionPoint) {
+		this.drivingInstructionPoints.add(drivingInstructionPoint);
 	}
 
-	public void addIntersectionPoint(Location intersectionPoint) {
-		intersectionPoints.add(intersectionPoint);
+	public void addStreetIntersectionPoint(Location streetIntersectionPoint) {
+		this.streetIntersectionPoints.add(streetIntersectionPoint);
 	}
 
 	public void addRouteShapingPoint(Location routeShapingPoint) {
-		routeShapingPoints.add(routeShapingPoint);
+		this.routeShapingPoints.add(routeShapingPoint);
+	}
+
+	public void addDrivingInstructionPoints(List<Location> drivingInstructionPoints) {
+		this.drivingInstructionPoints.addAll(drivingInstructionPoints);
+	}
+
+	public void addStreetIntersectionPoints(List<Location> streetIntersectionPoints) {
+		this.streetIntersectionPoints.addAll(streetIntersectionPoints);
+	}
+
+	public void addRouteShapingPoints(List<Location> routeShapingPoints) {
+		this.routeShapingPoints.addAll(routeShapingPoints);
 	}
 }

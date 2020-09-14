@@ -7,9 +7,9 @@ import lombok.Data;
 @Data
 public class Request {
 
-	private Coordinates origin;
+	private GeoCoordinates origin;
 
-	private Coordinates destination;
+	private GeoCoordinates destination;
 
-	private List<Coordinates> intermediateStops;
+	private List<GeoCoordinates> intermediateStops;
 }

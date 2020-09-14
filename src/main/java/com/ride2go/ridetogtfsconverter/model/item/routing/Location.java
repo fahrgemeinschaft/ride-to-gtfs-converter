@@ -5,20 +5,21 @@ import lombok.Data;
 @Data
 public class Location {
 
-	private Coordinates coordinates;
+	private GeoCoordinates geoCoordinates;
+
+	private Long osmNodeId;
 
 	private String address;
 
-	private Float duration;
+	private Double duration;
 
-	private Float distance;
+	private Double distance;
 
-	public Location(Coordinates coordinates) {
-		this.coordinates = coordinates;
+	public Location(GeoCoordinates geoCoordinates) {
+		this.geoCoordinates = geoCoordinates;
 	}
 
 	public Location(double latitude, double longitude) {
-		this.coordinates = new Coordinates(latitude,
-				longitude);
+		this.geoCoordinates = new GeoCoordinates(latitude, longitude);
 	}
 }
