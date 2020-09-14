@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
-import com.ride2go.ridetogtfsconverter.model.item.routing.Coordinates;
+import com.ride2go.ridetogtfsconverter.model.item.routing.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osm.Node;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osm.Osm;
 
@@ -17,8 +17,8 @@ public class OSMNodeService {
 
 	private static final String BASE_URI = "https://api.openstreetmap.org/api/0.6/node/";
 
-	protected static Coordinates convertIdToLatLon(long osmId) {
-		Coordinates coordinates = null;
+	protected static GeoCoordinates convertIdToLatLon(long osmId) {
+		GeoCoordinates geoCoordinates = null;
 		try {
 			String uri = BASE_URI + osmId;
 			ClientResponse clientResponse = WebClient.builder()
@@ -55,15 +55,15 @@ public class OSMNodeService {
 			}
 			double latitude = parseCoordinate(latitudeString);
 			double longitude = parseCoordinate(longitudeString);
-			coordinates = new Coordinates(latitude, longitude);
+			geoCoordinates = new GeoCoordinates(latitude, longitude);
 		} catch (RoutingException e) {
 			LOG.error("OSM error for node {}: {}", osmId, e.getMessage());
 		} catch (Exception e) {
 			LOG.error("WebClient problem: {}: {}: {}", e.getClass(), e.getCause(), e.getMessage());
 		}
-		return coordinates;
+		return geoCoordinates;
 	}
-	
+
 	private static double parseCoordinate(String coordinateString) throws RoutingException {
 		try {
 			double coordinate = Double.parseDouble(coordinateString);
