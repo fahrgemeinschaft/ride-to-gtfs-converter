@@ -3,21 +3,17 @@ package com.ride2go.ridetogtfsconverter.model.item.routing.osrm;
 import java.util.List;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class Leg {
+@EqualsAndHashCode(callSuper = false)
+public class Leg extends Measures {
 
 	private List<Step> steps;
 
 	private Float weight;
 
-	// in meter
-	private Float distance;
-
 	private String summary;
-
-	// travel time in seconds
-	private Float duration;
 
 	private Annotation annotation;
 }

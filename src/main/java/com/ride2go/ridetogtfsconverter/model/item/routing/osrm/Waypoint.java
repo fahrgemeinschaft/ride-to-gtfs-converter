@@ -16,5 +16,4 @@ public class Waypoint {
 
 	// in meter
 	private Float distance;
-
 }

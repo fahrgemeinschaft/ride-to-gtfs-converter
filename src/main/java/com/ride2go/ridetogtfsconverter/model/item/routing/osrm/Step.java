@@ -5,9 +5,11 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class Step {
+@EqualsAndHashCode(callSuper = false)
+public class Step extends Measures {
 
 	private List<Intersection> intersections;
 
@@ -17,12 +19,6 @@ public class Step {
 
 	// private String geometry;
 	private Geometry geometry;
-
-	// travel time in seconds
-	private Float duration;
-
-	// in meter
-	private Float distance;
 
 	private String name;
 

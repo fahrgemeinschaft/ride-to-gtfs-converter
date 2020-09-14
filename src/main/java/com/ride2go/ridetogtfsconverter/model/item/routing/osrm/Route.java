@@ -5,9 +5,11 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class Route {
+@EqualsAndHashCode(callSuper = false)
+public class Route extends Measures {
 
 	private List<Leg> legs;
 
@@ -18,10 +20,4 @@ public class Route {
 	private Geometry geometry;
 
 	private Float weight;
-
-	// in meter
-	private Float distance;
-
-	// travel time in seconds
-	private Float duration;
 }
