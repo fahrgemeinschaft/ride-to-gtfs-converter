@@ -1,11 +1,7 @@
 package com.ride2go.ridetogtfsconverter.routing;
 
-import static org.springframework.http.HttpStatus.OK;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +9,7 @@ import com.ride2go.ridetogtfsconverter.exception.RoutingException;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
 
-public abstract class RoutingService {
+public abstract class RoutingService extends WebClientService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RoutingService.class);
 
@@ -21,7 +17,7 @@ public abstract class RoutingService {
 
 	public abstract Response calculateRoute(Request request);
 
-	protected void check(Request request) throws RoutingException {
+	protected void check(final Request request) throws RoutingException {
 		if (request == null) {
 			throw new RoutingException("request is null");
 		}
@@ -33,23 +29,7 @@ public abstract class RoutingService {
 		}
 	}
 
-	protected ClientResponse getRequest(String uri) throws Exception {
-		ClientResponse clientResponse = WebClient.builder()
-				.build()
-				.get()
-				.uri(uri)
-				.exchange()
-				.block();
-		if (clientResponse == null) {
-			throw new RoutingException("client response is null");
-		}
-		if (clientResponse.statusCode() != OK) {
-			throw new RoutingException("response status code is " + clientResponse.statusCode());
-		}
-		return clientResponse;
-	}
-
-	protected static void nullCheck(Object o, String message) {
+	protected static void nullCheck(final Object o, final String message) {
 		if (o == null) {
 			LOG.warn(message);
 		}
@@ -79,7 +59,7 @@ public abstract class RoutingService {
 		// duplicate check
 	}
 
-	protected static String convertToJSON(Object o) {
+	protected static String convertToJSON(final Object o) {
 		String json = null;
 		try {
 			json = objectMapper.writeValueAsString(o);
