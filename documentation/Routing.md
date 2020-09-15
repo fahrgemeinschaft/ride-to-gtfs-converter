@@ -135,5 +135,10 @@ With the help of Photon we get a view where the routing points are located.
 **response model**   
 [<img src="images/class_diagrams/routing_ors_response_model.png" width="60%"/>](images/class_diagrams/routing_ors_response_model.png)
 
-
 [and the example result as JSON](pages/routing_ors_response_json.md)
+
+**driving instruction points**   
+[<img src="images/maps/routing_ors_feature-properties-segment-step-waypoint.png" width="60%"/>](images/maps/routing_ors_feature-properties-segment-step-waypoint.png)
+
+**route shaping points**   
+[<img src="images/maps/routing_ors_feature-geometry-coordinate.png" width="60%"/>](images/maps/routing_ors_feature-geometry-coordinate.png)
