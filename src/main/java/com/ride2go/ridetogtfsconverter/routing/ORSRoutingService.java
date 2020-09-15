@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
+import com.ride2go.ridetogtfsconverter.exception.WebClientException;
 import com.ride2go.ridetogtfsconverter.model.item.routing.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
@@ -51,7 +52,7 @@ public class ORSRoutingService extends RoutingService {
 				throw new RoutingException("response feature is null");
 			}
 			convert(feature, response);
-		} catch (RoutingException e) {
+		} catch (WebClientException | RoutingException e) {
 			LOG.error("OSRM routing error: " + e.getMessage());
 		} catch (Exception e) {
 			LOG.error("WebClient problem: {}: {}: {}", e.getClass(), e.getCause(), e.getMessage());
