@@ -1,5 +1,7 @@
 package com.ride2go.ridetogtfsconverter.model.item.routing;
 
+import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
+
 import lombok.Data;
 
 @Data
