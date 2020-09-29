@@ -96,6 +96,12 @@ public class TripValidator {
 					continue;
 				}
 			}
+			if (trip.getStarttime() == null) {
+				LOG.info("Remove invalid Trip without starttime: " + jsonConverter.toJSONString(trip));
+				trips.remove(i);
+				i--;
+				continue;
+			}
 		}
 	}
 
