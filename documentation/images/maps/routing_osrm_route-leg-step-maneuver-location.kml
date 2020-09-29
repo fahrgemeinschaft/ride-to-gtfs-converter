@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+   <Document>
+      <Style id="given">
+         <IconStyle>
+            <Icon>
+               <href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+            </Icon>
+         </IconStyle>
+      </Style>
+      <Style id="generated">
+         <IconStyle>
+            <Icon>
+               <href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png</href>
+            </Icon>
+         </IconStyle>
+      </Style>
+      <Placemark>
+         <styleUrl>#given</styleUrl>
+         <name>origin</name>
+         <description>Berlin</description>
+         <Point>
+            <coordinates>13.381777,52.531677</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#given</styleUrl>
+         <name>destination</name>
+         <description>Hamburg</description>
+         <Point>
+            <coordinates>9.993682,53.551086</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>1</name>
+         <description>1</description>
+         <Point>
+            <coordinates>13.381747,52.531663</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>2</name>
+         <description>2</description>
+         <Point>
+            <coordinates>13.371771,52.539063</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>3</name>
+         <description>3</description>
+         <Point>
+            <coordinates>13.33208,52.561788</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>4</name>
+         <description>4</description>
+         <Point>
+            <coordinates>13.330644,52.562615</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>5</name>
+         <description>5</description>
+         <Point>
+            <coordinates>13.326715,52.562555</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>6</name>
+         <description>6</description>
+         <Point>
+            <coordinates>13.322243,52.560589</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>7</name>
+         <description>7</description>
+         <Point>
+            <coordinates>13.312381,52.564881</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>8</name>
+         <description>8</description>
+         <Point>
+            <coordinates>13.306796,52.567286</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>9</name>
+         <description>9</description>
+         <Point>
+            <coordinates>13.200646,52.695788</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>10</name>
+         <description>10</description>
+         <Point>
+            <coordinates>13.17645,52.705828</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>11</name>
+         <description>11</description>
+         <Point>
+            <coordinates>13.030865,52.709881</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>12</name>
+         <description>12</description>
+         <Point>
+            <coordinates>12.462452,53.123204</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>13</name>
+         <description>13</description>
+         <Point>
+            <coordinates>10.069959,53.559667</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>14</name>
+         <description>14</description>
+         <Point>
+            <coordinates>10.069372,53.559519</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>15</name>
+         <description>15</description>
+         <Point>
+            <coordinates>10.053501,53.561026</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>16</name>
+         <description>16</description>
+         <Point>
+            <coordinates>10.041996,53.555555</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>17</name>
+         <description>17</description>
+         <Point>
+            <coordinates>10.040669,53.555576</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>18</name>
+         <description>18</description>
+         <Point>
+            <coordinates>10.026568,53.553805</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>19</name>
+         <description>19</description>
+         <Point>
+            <coordinates>10.024303,53.553598</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>20</name>
+         <description>20</description>
+         <Point>
+            <coordinates>10.019225,53.552781</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>21</name>
+         <description>21</description>
+         <Point>
+            <coordinates>10.018587,53.552601</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>22</name>
+         <description>22</description>
+         <Point>
+            <coordinates>10.017919,53.552742</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>23</name>
+         <description>23</description>
+         <Point>
+            <coordinates>10.008877,53.552209</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>24</name>
+         <description>24</description>
+         <Point>
+            <coordinates>10.005872,53.552018</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>25</name>
+         <description>25</description>
+         <Point>
+            <coordinates>10.005366,53.55286</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>26</name>
+         <description>26</description>
+         <Point>
+            <coordinates>10.003848,53.554103</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>27</name>
+         <description>27</description>
+         <Point>
+            <coordinates>10.002509,53.553478</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>28</name>
+         <description>28</description>
+         <Point>
+            <coordinates>9.999922,53.554962</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>29</name>
+         <description>29</description>
+         <Point>
+            <coordinates>9.994632,53.552025</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>30</name>
+         <description>30</description>
+         <Point>
+            <coordinates>9.995107,53.551175</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>31</name>
+         <description>31</description>
+         <Point>
+            <coordinates>9.994235,53.550694</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <styleUrl>#generated</styleUrl>
+         <name>32</name>
+         <description>32</description>
+         <Point>
+            <coordinates>9.993654,53.551101</coordinates>
+         </Point>
+      </Placemark>
+      <Placemark>
+         <LineString>
+            <coordinates>13.381777,52.531677
+13.381747,52.531663
+13.371771,52.539063
+13.33208,52.561788
+13.330644,52.562615
+13.326715,52.562555
+13.322243,52.560589
+13.312381,52.564881
+13.306796,52.567286
+13.200646,52.695788
+13.17645,52.705828
+13.030865,52.709881
+12.462452,53.123204
+10.069959,53.559667
+10.069372,53.559519
+10.053501,53.561026
+10.041996,53.555555
+10.040669,53.555576
+10.026568,53.553805
+10.024303,53.553598
+10.019225,53.552781
+10.018587,53.552601
+10.017919,53.552742
+10.008877,53.552209
+10.005872,53.552018
+10.005366,53.55286
+10.003848,53.554103
+10.002509,53.553478
+9.999922,53.554962
+9.994632,53.552025
+9.995107,53.551175
+9.994235,53.550694
+9.993654,53.551101
+9.993682,53.551086</coordinates>
+         </LineString>
+      </Placemark>
+   </Document>
+</kml>

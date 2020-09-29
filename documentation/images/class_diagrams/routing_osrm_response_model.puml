@@ -1,0 +1,96 @@
+@startuml
+
+class OSRMResponse {
+code: String
+}
+
+class Waypoint {
+hint: String
+location: List<Double>
+name: String
+distance: Float
+}
+
+class Route {
+weightName: String
+weight: Float
+distance: Float
+duration: Float
+}
+
+class Leg {
+weight: Float
+distance: Float
+summary: String
+duration: Float
+}
+
+class Geometry {
+type: String
+<b><color:green>coordinates: List<List<Double>></color></b>
+}
+
+class Step {
+drivingSide: String
+duration: Float
+distance: Float
+name: String
+pronunciation: String
+weight: Float
+mode: String
+ref: String
+destinations: String
+exits: List<String>
+rotaryName: String
+rotaryPronunciation: String
+}
+
+class Annotation {
+distance: List<Float>
+duration: List<Float>
+datasources: List<Integer>
+<b><color:green>nodes: List<Long></color></b>
+weight: List<Long>
+speed: List<Float>
+}
+
+class Intersection {
+out: Integer
+in: Integer
+entry: List<Boolean>
+<b><color:green>location: List<Double></color></b>
+bearings: List<Integer>
+classes: List<String>
+}
+
+class Maneuver {
+bearingAfter: Integer
+bearingBefore: Integer
+type: String
+<b><color:green>location: List<Double></color></b>
+modifier: String
+exit: Integer
+}
+
+class Metadata {
+datasourceNames: List<String>
+}
+
+class Lane {
+valid: Boolean
+indications: List<String>
+}
+
+OSRMResponse o-- "0..*" Waypoint
+OSRMResponse o-- "0..*" Route
+Route o-- "0..*" Leg
+Route o-- "0..1" Geometry
+Leg o-- "0..*" Step
+Leg o-- "0..1" Annotation
+Step o-- "0..*" Intersection
+Step o-- "0..1" Geometry
+Step o-- "0..1" Maneuver
+Annotation o-- "0..1" Metadata
+Intersection o-- "0..*" Lane
+
+@enduml
