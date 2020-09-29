@@ -1,8 +1,9 @@
 package com.ride2go.ridetogtfsconverter.conversion;
 
+import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.DATA_TIME_FORMATTER;
+
 import java.time.DateTimeException;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 import javax.persistence.AttributeConverter;
@@ -16,15 +17,13 @@ public class LocalTimeAttributeConverter implements AttributeConverter<LocalTime
 
 	private static final Logger LOG = LoggerFactory.getLogger(LocalTimeAttributeConverter.class);
 
-	private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("Hmm");
-
 	@Override
 	public Short convertToDatabaseColumn(final LocalTime localTime) {
 		if (localTime == null) {
 			return null;
 		}
 		try {
-			String localDateString = localTime.format(FORMATTER);
+			String localDateString = localTime.format(DATA_TIME_FORMATTER);
 			Short sqlDate = Short.valueOf(localDateString);
 			return sqlDate;
 		} catch (DateTimeException e) {
@@ -43,7 +42,7 @@ public class LocalTimeAttributeConverter implements AttributeConverter<LocalTime
 			while (stringTime.length() < 3) {
 				stringTime = 0 + stringTime;
 			}
-			LocalTime localTime = LocalTime.parse(stringTime, FORMATTER);
+			LocalTime localTime = LocalTime.parse(stringTime, DATA_TIME_FORMATTER);
 			return localTime;
 		} catch (DateTimeParseException e) {
 			LOG.warn("Database time '{}' can't be converted. Using null instead.", sqlTime);
