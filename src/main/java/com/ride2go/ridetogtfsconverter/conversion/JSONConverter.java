@@ -16,10 +16,12 @@ public class JSONConverter {
 	private ObjectMapper objectMapper;
 
 	public String toJSONString(final Object o) {
-		try {
-			return objectMapper.writeValueAsString(o);
-		} catch (JsonProcessingException e) {
-			LOG.warn("JSON processing problem: " + e.getMessage());
+		if (o != null) {
+			try {
+				return objectMapper.writeValueAsString(o);
+			} catch (JsonProcessingException e) {
+				LOG.warn("JSON processing problem: " + e.getMessage());
+			}
 		}
 		return "";
 	}
