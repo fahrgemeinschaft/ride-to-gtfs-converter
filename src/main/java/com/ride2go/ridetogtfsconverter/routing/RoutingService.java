@@ -3,8 +3,6 @@ package com.ride2go.ridetogtfsconverter.routing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
@@ -12,8 +10,6 @@ import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
 public abstract class RoutingService extends WebClientService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RoutingService.class);
-
-	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	public abstract Response calculateRoute(Request request);
 
@@ -41,10 +37,10 @@ public abstract class RoutingService extends WebClientService {
 			if (!address.isEmpty()) {
 				return address;
 			} else {
-				LOG.warn(message + "address is empty");
+				// LOG.warn(message + "address is empty");
 			}
 		} else {
-			LOG.warn(message + "address is null");
+			// LOG.warn(message + "address is null");
 		}
 		return null;
 	}
@@ -57,15 +53,5 @@ public abstract class RoutingService extends WebClientService {
 		// todo:
 		// null check
 		// duplicate check
-	}
-
-	protected static String convertToJSON(final Object o) {
-		String json = null;
-		try {
-			json = objectMapper.writeValueAsString(o);
-		} catch (JsonProcessingException e) {
-			LOG.warn("JSON processing problem: " + e.getMessage());
-		}
-		return json;
 	}
 }
