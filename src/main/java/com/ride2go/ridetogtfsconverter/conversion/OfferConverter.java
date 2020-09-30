@@ -56,7 +56,7 @@ public class OfferConverter {
 		return offers;
 	}
 
-	private Place getPlace(EntityRoutingPlace entityRoutingPlace) {
+	private Place getPlace(final EntityRoutingPlace entityRoutingPlace) {
 		GeoCoordinates geoCoordinates = new GeoCoordinates(entityRoutingPlace.getLat(), entityRoutingPlace.getLon());
 		
 		Place place = new Place();
