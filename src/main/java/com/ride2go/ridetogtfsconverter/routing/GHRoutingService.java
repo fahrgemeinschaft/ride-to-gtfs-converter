@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 
 import com.graphhopper.directions.api.client.ApiException;
 import com.graphhopper.directions.api.client.api.RoutingApi;
@@ -16,11 +18,13 @@ import com.graphhopper.directions.api.client.model.ResponseInstruction;
 import com.graphhopper.directions.api.client.model.RouteResponse;
 import com.graphhopper.directions.api.client.model.RouteResponsePath;
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
-import com.ride2go.ridetogtfsconverter.model.item.routing.GeoCoordinates;
+import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
 
+@Service
+@Qualifier("GH")
 public class GHRoutingService extends RoutingService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GHRoutingService.class);
@@ -73,7 +77,8 @@ public class GHRoutingService extends RoutingService {
 				path.getDistance());
 		if (path.getTime() != null) {
 			response.setDuration(
-					Double.valueOf(path.getTime()));
+					// milliseconds in seconds
+					Double.valueOf(path.getTime()) / 1000);
 		} else {
 			LOG.warn(MESSAGE + "path.duration is null");
 		}

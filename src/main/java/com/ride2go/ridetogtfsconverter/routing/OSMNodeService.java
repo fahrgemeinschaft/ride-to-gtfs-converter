@@ -2,21 +2,23 @@ package com.ride2go.ridetogtfsconverter.routing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 import com.ride2go.ridetogtfsconverter.exception.OSMException;
 import com.ride2go.ridetogtfsconverter.exception.WebClientException;
-import com.ride2go.ridetogtfsconverter.model.item.routing.GeoCoordinates;
+import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osm.Node;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osm.Osm;
 
+@Service
 public class OSMNodeService extends WebClientService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OSMNodeService.class);
 
 	private static final String BASE_URI = "https://api.openstreetmap.org/api/0.6/node/";
 
-	protected static GeoCoordinates convertIdToLatLon(final long osmId) {
+	protected GeoCoordinates convertIdToLatLon(final long osmId) {
 		GeoCoordinates geoCoordinates = null;
 		try {
 			String uri = BASE_URI + osmId;
@@ -57,7 +59,7 @@ public class OSMNodeService extends WebClientService {
 		return geoCoordinates;
 	}
 
-	private static double parseCoordinate(final String coordinateString) throws OSMException {
+	private double parseCoordinate(final String coordinateString) throws OSMException {
 		try {
 			double coordinate = Double.parseDouble(coordinateString);
 			return coordinate;
