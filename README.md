@@ -13,6 +13,6 @@ is the given userId for getting all relevant user rides
 
 with given directory and getting all relevant rides
 
-`./gradlew clean bootRun
+`./gradlew clean bootRun`
 
 using relative default directory `data/` and getting all relevant rides
