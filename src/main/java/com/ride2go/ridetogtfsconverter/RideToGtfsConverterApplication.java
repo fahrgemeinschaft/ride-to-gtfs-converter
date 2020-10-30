@@ -17,6 +17,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import com.ride2go.ridetogtfsconverter.gtfs.OBAWriterService;
+import com.ride2go.ridetogtfsconverter.gtfs.WriterService;
 import com.ride2go.ridetogtfsconverter.model.data.ride.EntityUser;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.repository.UserRepository;
@@ -34,7 +35,7 @@ public class RideToGtfsConverterApplication implements CommandLineRunner {
 	private ReaderService readerService;
 
 	@Autowired
-	private OBAWriterService writerService;
+	private WriterService writerService;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -60,6 +61,7 @@ public class RideToGtfsConverterApplication implements CommandLineRunner {
 			LOG.error("Problem with given directory: {}", e.getMessage());
 			return;
 		}
+		writerService.writeProviderInfoAsGTFS(directory);
 		if (userId != null) {
 			LOG.info("UserId is " + userId);
 			process(directory, userId);
@@ -79,7 +81,7 @@ public class RideToGtfsConverterApplication implements CommandLineRunner {
 
 	private void process(File directory, String userId) {
 		List<Offer> offers = readerService.getOffersByUserId(userId);
-		writerService.writeAsGTFS(offers, directory);
+		writerService.writeOfferDataAsGTFS(offers, directory);
 	}
 
 	private String getDirectory(String... args) {
