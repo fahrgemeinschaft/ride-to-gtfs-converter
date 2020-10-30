@@ -8,11 +8,14 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
 import com.ride2go.ridetogtfsconverter.exception.WebClientException;
-import com.ride2go.ridetogtfsconverter.model.item.routing.GeoCoordinates;
+import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
@@ -26,9 +29,14 @@ import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.OSRMResponse;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Route;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osrm.Step;
 
+@Service
+@Qualifier("OSRM")
 public class OSRMRoutingService extends RoutingService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OSRMRoutingService.class);
+
+	@Autowired
+	OSMNodeService osmNodeService;
 
 	private static final String MESSAGE = "OSRM response body element ";
 
@@ -44,8 +52,12 @@ public class OSRMRoutingService extends RoutingService {
 			check(request);
 			String uri = getUri(request);
 			ClientResponse clientResponse = getRequest(uri);
-			OSRMResponse osrmResponse = clientResponse.bodyToMono(OSRMResponse.class)
-					.block();
+			OSRMResponse osrmResponse = null;
+			try {
+				osrmResponse = clientResponse.bodyToMono(OSRMResponse.class).block();
+			} catch (Exception e) {
+				LOG.error("OSRM routing deserialization error: ", e);
+			}
 			if (osrmResponse == null) {
 				throw new RoutingException("response body is null");
 			}
@@ -333,7 +345,7 @@ public class OSRMRoutingService extends RoutingService {
 		return point;
 	}
 
-	private static void addGeoCoordinates(List<Location> routeShapingPoints3, final List<Location> routeShapingPoints1) {
+	private void addGeoCoordinates(List<Location> routeShapingPoints3, final List<Location> routeShapingPoints1) {
 		if (routeShapingPoints3.size() == routeShapingPoints1.size()) {
 			for (int i = 0; i < routeShapingPoints3.size(); i++) {
 				routeShapingPoints3.get(i).setGeoCoordinates(
@@ -346,7 +358,7 @@ public class OSRMRoutingService extends RoutingService {
 			for (Location point : routeShapingPoints3) {
 				osmNodeId = point.getOsmNodeId();
 				if (osmNodeId != null) {
-					geoCoordinates = OSMNodeService.convertIdToLatLon(osmNodeId);
+					geoCoordinates = osmNodeService.convertIdToLatLon(osmNodeId);
 					if (geoCoordinates != null) {
 						point.setGeoCoordinates(geoCoordinates);
 					}

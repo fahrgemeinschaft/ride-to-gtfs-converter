@@ -1,6 +1,6 @@
 package com.ride2go.ridetogtfsconverter.routing
 
-import com.ride2go.ridetogtfsconverter.model.item.routing.GeoCoordinates
+import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates
 
 class RoutingUtil {
 
