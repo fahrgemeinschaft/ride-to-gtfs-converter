@@ -47,9 +47,9 @@ public class OBAWriterService implements WriterService {
 	private static final Logger LOG = LoggerFactory.getLogger(OBAWriterService.class);
 
 	@Autowired
-	@Qualifier("GH")
+	// @Qualifier("GH")
 	// @Qualifier("ORS")
-	// @Qualifier("OSRM")
+	@Qualifier("OSRM")
 	private RoutingService routingService;
 
 	private List<Offer> offers;
