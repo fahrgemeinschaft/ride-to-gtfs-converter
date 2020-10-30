@@ -1,15 +1,19 @@
 package com.ride2go.ridetogtfsconverter.routing
 
-import spock.lang.Specification
+class OSMNodeServiceTest extends RoutingSpecification {
 
-class OSMNodeServiceTest extends Specification {
+	private WebClientService service = new OSMNodeService()
+
+	def setup() {
+		initService(service)
+	}
 
 	def "A valid node GET request should work and return the right results"() {
 		given:
 			final osmId = 1989098258L
 
 		when:
-			final geoCoordinates = OSMNodeService.convertIdToLatLon(osmId)
+			final geoCoordinates = service.convertIdToLatLon(osmId)
 
 		then:
 			geoCoordinates.latitude  == 24.3655948

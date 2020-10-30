@@ -57,9 +57,9 @@ The OSRM routing response has different collections of generated routing points 
 **route shaping points (3)**   
 [<img src="images/maps/routing_osrm_route-leg-annotation-node-convertOsmIdToLatLon.png" width="60%"/>](images/maps/routing_osrm_route-leg-annotation-node-convertOsmIdToLatLon.png.png)
 
-The first Google Earth picture shows all the routing points where direction is changing. A lot of them are close to the origin and the destination, but not so many in between. In the second picture the street intersection points are more equally spread along the route. And where routes are crossing there are possibilities to enter/exit rides. Unfortunately intersection points don't have a duration between two like the direction points and this is required for GTFS stops. To calculate them separately might be too time-consuming.
+The first Google Earth picture with the driving instruction points is showing all the routing points where direction is changing. A lot of them are close to the origin and the destination, but not so many in between since on the highway there are usually long sections going straight. In the second picture the street intersection points are more equally spread along the route. And where routes are crossing there are possibilities to enter/exit rides. Unfortunately intersection points don't have a duration between two like the direction points and this is required for GTFS stops. To calculate them separately might be too time-consuming.
 
-The last three pictures include all the in between points for drawing the route. This can be used for the GTFS shapes.
+The last three pictures with the route shaping points include all the in between points for drawing the route. This can be used for the GTFS shapes.
 
 With the help of Photon we get a view where the routing points are located.
 
