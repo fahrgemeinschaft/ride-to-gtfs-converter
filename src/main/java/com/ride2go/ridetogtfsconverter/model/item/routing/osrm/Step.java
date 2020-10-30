@@ -34,7 +34,8 @@ public class Step extends Measures {
 
 	private String destinations;
 
-	private List<String> exits;
+	// private List<String> exits;
+	private Object exits;
 
 	@JsonProperty("rotary_name")
 	private String rotaryName;
