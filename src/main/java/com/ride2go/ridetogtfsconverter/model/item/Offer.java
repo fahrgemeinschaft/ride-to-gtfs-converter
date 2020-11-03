@@ -13,8 +13,6 @@ public class Offer {
 
 	private LocalDate startDate;
 
-	private LocalTime startTime;
-
 	private Place origin;
 
 	private Place destination;
