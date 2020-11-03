@@ -13,28 +13,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Converter(autoApply = true)
-public class LocalDateAttributeConverter implements AttributeConverter<LocalDate, Long> {
+public class LocalDateAttributeConverter implements AttributeConverter<LocalDate, Integer> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(LocalDateAttributeConverter.class);
 
 	@Override
-	public Long convertToDatabaseColumn(final LocalDate localDate) {
+	public Integer convertToDatabaseColumn(final LocalDate localDate) {
 		if (localDate == null) {
 			return null;
 		}
 		try {
 			String localDateString = localDate.format(BASIC_ISO_DATE);
-			Long sqlDate = Long.valueOf(localDateString);
+			Integer sqlDate = Integer.valueOf(localDateString);
 			return sqlDate;
-		} catch (DateTimeException e) {
+		} catch (DateTimeException | NumberFormatException e) {
 			LOG.warn("Entity date '{}' can't be converted. Using null instead.", localDate);
 			return null;
 		}
 	}
 
 	@Override
-	public LocalDate convertToEntityAttribute(final Long sqlDate) {
-		if (sqlDate == null || sqlDate < 10000000 || sqlDate > 99999999) {
+	public LocalDate convertToEntityAttribute(final Integer sqlDate) {
+		if (sqlDate == null) {
+			return null;
+		}
+		if (sqlDate.intValue() < 10000000 || sqlDate.intValue() > 99999999) {
+			LOG.warn("Database date '{}' can't be converted. Using null instead.", sqlDate);
 			return null;
 		}
 		try {
