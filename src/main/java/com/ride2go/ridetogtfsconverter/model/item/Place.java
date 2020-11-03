@@ -11,5 +11,5 @@ public class Place {
 
 	private String address;
 
-	private int timeInSeconds;
+	private Integer timeInSeconds;
 }
