@@ -31,15 +31,12 @@ import org.onebusaway.gtfs.serialization.GtfsWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.model.item.Place;
 import com.ride2go.ridetogtfsconverter.model.item.Recurring;
-import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
-import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
-import com.ride2go.ridetogtfsconverter.routing.RoutingService;
+import com.ride2go.ridetogtfsconverter.routing.RoutingHandler;
 
 @Service
 public class OBAWriterService implements WriterService {
@@ -47,10 +44,7 @@ public class OBAWriterService implements WriterService {
 	private static final Logger LOG = LoggerFactory.getLogger(OBAWriterService.class);
 
 	@Autowired
-	// @Qualifier("GH")
-	// @Qualifier("ORS")
-	@Qualifier("OSRM")
-	private RoutingService routingService;
+	private RoutingHandler routingHandler;
 
 	private List<Offer> offers;
 
@@ -68,10 +62,6 @@ public class OBAWriterService implements WriterService {
 
 	private List<Trip> trips = new ArrayList<>();
 
-	private Request request = new Request();
-
-	private Response response;
-
 	public void writeProviderInfoAsGTFS(final File directory) {
 		init(null, directory);
 
@@ -88,7 +78,7 @@ public class OBAWriterService implements WriterService {
 
 		init(offers, directory);
 
-		setRoutingInformation();
+		routingHandler.setRoutingInformation(this.offers);
 
 		if (this.offers.size() == 0) {
 			return;
@@ -111,58 +101,6 @@ public class OBAWriterService implements WriterService {
 	private void init(final List<Offer> offers, final File directory) {
 		this.offers = offers;
 		this.directory = directory;
-	}
-
-	private void setRoutingInformation() {
-		Offer offer;
-		int timeInSeconds;
-		Place from, to;
-		Response response;
-		boolean remove;
-		for (int i = 0; i < offers.size(); i++) {
-			offer = offers.get(i);
-			remove = false;
-			timeInSeconds = offer.getStartTime().toSecondOfDay();
-			from = offer.getOrigin();
-			from.setTimeInSeconds(timeInSeconds);
-			if (offer.getIntermediatePlaces() != null) {
-				for (int j = 0; j < offer.getIntermediatePlaces().size(); j++) {
-					to = offer.getIntermediatePlaces().get(j);
-					response = getRouting(from, to);
-					if (response == null || response.getDuration() == null) {
-						remove = true;
-						break;
-					} else {
-						timeInSeconds += response.getDuration().intValue();
-						to.setTimeInSeconds(timeInSeconds);
-					}
-					from = to;
-				}
-			}
-			if (!remove) {
-				to = offer.getDestination();
-				response = getRouting(from, to);
-				if (response == null || response.getDuration() == null) {
-					remove = true;
-				} else {
-					timeInSeconds += response.getDuration().intValue();
-					offer.getDestination().setTimeInSeconds(timeInSeconds);
-				}
-			}
-			if (remove) {
-				offers.remove(i);
-				i--;
-				LOG.info("Remove Offer with missing routing info. Offer id is: " + offer.getId());
-				continue;
-			}
-		}
-	}
-
-	private Response getRouting(Place from, Place to) {
-		request.setOrigin(from.getGeoCoordinates());
-		request.setDestination(to.getGeoCoordinates());
-		response = routingService.calculateRoute(request);
-		return response;
 	}
 
 	private <T> void addToFile(List<T> list, final String f) {
