@@ -1,9 +1,14 @@
 package com.ride2go.ridetogtfsconverter.model.data.ride;
 
+import java.time.LocalTime;
+
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import com.ride2go.ridetogtfsconverter.conversion.LocalTimeAttributeConverter;
 
 import lombok.Data;
 
@@ -21,4 +26,8 @@ public class EntityRoutingPlace {
 	private Double lat;
 
 	private Double lon;
+
+	@Column(columnDefinition = "INT(11)")
+	@Convert(converter = LocalTimeAttributeConverter.class)
+	private LocalTime stoptime;
 }
