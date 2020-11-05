@@ -30,16 +30,21 @@ public class DBReaderService implements ReaderService {
 	@Autowired
 	private TripRepository tripRepository;
 
+	private int size;
+
 	public List<Offer> getOffersByUserId(final String userId) {
 		List<EntityTrip> trips = getValidRelevantAndOngoingUserOffers(userId);
 		List<Offer> offers = offerConverter.fromTripToOffer(trips);
-		LOG.info("Using {} valid, relevant and ongoing user offers having all required fields", trips.size());
+		if (size > 0) {
+			LOG.info("Using {} valid, relevant and ongoing user offers having all required fields", trips.size());
+		}
 		return offers;
 	}
 
 	private List<EntityTrip> getValidRelevantAndOngoingUserOffers(final String userId) {
 		List<EntityTrip> trips = getOfferList(userId);
-		LOG.info("Found {} trips in the database for user: {}", trips.size(), userId);
+		size = trips.size();
+		LOG.info("Found {} trips in the database for user: {}", size, userId);
 		tripValidator.validTrips(trips);
 		ongoingTrips(trips);
 		return trips;

@@ -12,8 +12,11 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import org.onebusaway.csv_entities.exceptions.MissingRequiredEntityException;
+import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
@@ -23,30 +26,25 @@ import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
+import org.onebusaway.gtfs.serialization.GtfsReader;
 import org.onebusaway.gtfs.serialization.GtfsWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.model.item.Place;
 import com.ride2go.ridetogtfsconverter.model.item.Recurring;
-import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
-import com.ride2go.ridetogtfsconverter.model.item.routing.Response;
-import com.ride2go.ridetogtfsconverter.routing.RoutingService;
+import com.ride2go.ridetogtfsconverter.routing.RoutingHandler;
 
 @Service
-public class OBAWriterService {
+public class OBAWriterService implements WriterService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OBAWriterService.class);
 
 	@Autowired
-	@Qualifier("GH")
-	// @Qualifier("ORS")
-	// @Qualifier("OSRM")
-	private RoutingService routingService;
+	private RoutingHandler routingHandler;
 
 	private List<Offer> offers;
 
@@ -64,92 +62,87 @@ public class OBAWriterService {
 
 	private List<Trip> trips = new ArrayList<>();
 
-	private Request request = new Request();
+	public void writeProviderInfoAsGTFS(final File directory) {
+		init(null, directory);
 
-	private Response response;
+		setAgency();
 
-	public void writeAsGTFS(final List<Offer> offers, final String directory) {
+		writeFile(Arrays.asList(agency), "agency.txt");
+		writeFile(getFeedInfo(), "feed_info.txt");
+	}
+
+	public void writeOfferDataAsGTFS(final List<Offer> offers, final File directory) {
+		if (offers.size() == 0) {
+			return;
+		}
+
 		init(offers, directory);
 
-		setRoutingInformation();
+		routingHandler.setRoutingInformation(this.offers);
+
+		if (this.offers.size() == 0) {
+			return;
+		}
 
 		setAgency();
 		setStops();
 		setRoutes();
 		setTrips();
 
-		writeFile(Arrays.asList(agency), "agency.txt");
-		writeFile(getFeedInfo(), "feed_info.txt");
-		writeFile(stops, "stops.txt");
-		writeFile(routes, "routes.txt");
-		writeFile(getCalendars(), "calendar.txt");
-		writeFile(trips, "trips.txt");
-		writeFile(getStopTimes(), "stop_times.txt");
+		addToFile(stops, "stops.txt");
+		addToFile(routes, "routes.txt");
+		addToFile(getCalendars(), "calendar.txt");
+		addToFile(trips, "trips.txt");
+		addToFile(getStopTimes(), "stop_times.txt");
 
 		LOG.info("Saved {} offers as GTFS", trips.size());
 	}
 
-	private void init(final List<Offer> offers, final String directory) {
+	private void init(final List<Offer> offers, final File directory) {
 		this.offers = offers;
-		this.directory = new File(directory);
+		this.directory = directory;
 	}
 
-	private void setRoutingInformation() {
-		Offer offer;
-		int timeInSeconds;
-		Place from, to;
-		Response response;
-		boolean remove;
-		for (int i = 0; i < offers.size(); i++) {
-			offer = offers.get(i);
-			remove = false;
-			timeInSeconds = offer.getStartTime().toSecondOfDay();
-			from = offer.getOrigin();
-			from.setTimeInSeconds(timeInSeconds);
-			if (offer.getIntermediatePlaces() != null) {
-				for (int j = 0; j < offer.getIntermediatePlaces().size(); j++) {
-					to = offer.getIntermediatePlaces().get(j);
-					response = getRouting(from, to);
-					if (response == null || response.getDuration() == null) {
-						remove = true;
-						break;
-					} else {
-						timeInSeconds += response.getDuration().intValue();
-						to.setTimeInSeconds(timeInSeconds);
-					}
-					from = to;
-				}
-			}
-			if (!remove) {
-				to = offer.getDestination();
-				response = getRouting(from, to);
-				if (response == null || response.getDuration() == null) {
-					remove = true;
-				} else {
-					timeInSeconds += response.getDuration().intValue();
-					offer.getDestination().setTimeInSeconds(timeInSeconds);
-				}
-			}
-			if (remove) {
-				offers.remove(i);
-				i--;
-				LOG.info("Remove Offer with missing routing info. Offer id is: " + offer.getId());
-				continue;
-			}
+	private <T> void addToFile(List<T> list, final String f) {
+		if (list.size() == 0) {
+			return;
 		}
+
+		GtfsReader reader = new GtfsReader();
+		GtfsRelationalDaoImpl dao = new GtfsRelationalDaoImpl();
+		try {
+			reader.setInputLocation(directory);
+			reader.setEntityStore(dao);
+			Collection<T> oldColllection = (Collection<T>) dao.getAllEntitiesForType(list.get(0).getClass());
+			if (oldColllection != null && oldColllection.size() > 0) {
+				list.addAll(oldColllection);
+			}
+		} catch (MissingRequiredEntityException e) {
+			LOG.info("File {} has no entries yet" + f);
+		} catch (IOException e) {
+			LOG.error("Problem getting entries out of file {}: {}" + f, e.getMessage());
+		}
+		try {
+			if (dao != null) {
+				dao.close();
+			}
+		} catch (Exception e) {
+			LOG.error("Problem closing GtfsRelationalDaoImpl: " + e.getMessage());
+		}
+		try {
+			if (reader != null) {
+				reader.close();
+			}
+		} catch (IOException e) {
+			LOG.error("Problem closing GtfsReader: " + e.getMessage());
+		}
+		writeFile(list, f);
 	}
 
-	private Response getRouting(Place from, Place to) {
-		request.setOrigin(from.getGeoCoordinates());
-		request.setDestination(to.getGeoCoordinates());
-		response = routingService.calculateRoute(request);
-		return response;
-	}
-
-	private void writeFile(final List<?> list, final String f) {
+	private <T> void writeFile(final List<T> list, final String f) {
 		GtfsWriter writer = new GtfsWriter();
 		writer.setOutputLocation(directory);
-		for (Object item : list) {
+		for (T item : list) {
 			writer.handleEntity(item);
 		}
 		try {

@@ -16,4 +16,6 @@ public class DateAndTimeHandler {
 	public static final LocalDate YESTERDAY = TODAY.minusDays(1);
 
 	public static final LocalDate ONE_MONTH_FROM_TODAY = TODAY.plusMonths(1);
+
+	public static final int ONE_DAY_IN_SECONDS = 86400;
 }

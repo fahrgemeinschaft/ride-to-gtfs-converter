@@ -1,5 +1,8 @@
 package com.ride2go.ridetogtfsconverter.conversion;
 
+import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.ONE_DAY_IN_SECONDS;
+
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +18,8 @@ import com.ride2go.ridetogtfsconverter.model.item.Recurring;
 @Service
 public class OfferConverter {
 
+	private int previousTimeInSeconds;
+
 	public List<Offer> fromTripToOffer(final List<EntityTrip> trips) {
 		List<Offer> offers = new ArrayList<>();
 		Offer offer;
@@ -26,12 +31,11 @@ public class OfferConverter {
 			offer = new Offer();
 			offer.setId(trip.getTripId());
 			offer.setStartDate(trip.getStartdate());
-			offer.setStartTime(trip.getStarttime());
 			last = trip.getRoutings().size() - 1;
 			place = getPlace(trip.getRoutings().get(last).getOrigin());
+			place.setTimeInSeconds(trip.getStarttime().toSecondOfDay());
+			previousTimeInSeconds = place.getTimeInSeconds();
 			offer.setOrigin(place);
-			place = getPlace(trip.getRoutings().get(last).getDestination());
-			offer.setDestination(place);
 			if (trip.getRoutings().size() > 1) {
 				places = new ArrayList<>();
 				for (int i = 0; i < trip.getRoutings().size() - 2; i++) {
@@ -40,6 +44,8 @@ public class OfferConverter {
 				}
 				offer.setIntermediatePlaces(places);
 			}
+			place = getPlace(trip.getRoutings().get(last).getDestination());
+			offer.setDestination(place);
 			if (trip.getReoccurs().doesReoccur()) {
 				recurring = new Recurring();
 				recurring.setMonday(trip.getReoccurs().getMo());
@@ -58,11 +64,21 @@ public class OfferConverter {
 
 	private Place getPlace(final EntityRoutingPlace entityRoutingPlace) {
 		GeoCoordinates geoCoordinates = new GeoCoordinates(entityRoutingPlace.getLat(), entityRoutingPlace.getLon());
-		
+
 		Place place = new Place();
 		place.setId(entityRoutingPlace.getPlaceId());
 		place.setGeoCoordinates(geoCoordinates);
 		place.setAddress(entityRoutingPlace.getAddress());
+
+		LocalTime stoptime = entityRoutingPlace.getStoptime();
+		if (stoptime != null) {
+			int stoptimeInSeconds = stoptime.toSecondOfDay();
+			while (stoptimeInSeconds < previousTimeInSeconds) {
+				stoptimeInSeconds += ONE_DAY_IN_SECONDS;
+			}
+			place.setTimeInSeconds(stoptimeInSeconds);
+			previousTimeInSeconds = stoptimeInSeconds;
+		}
 		return place;
 	}
 }
