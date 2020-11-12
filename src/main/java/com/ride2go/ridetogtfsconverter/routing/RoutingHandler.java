@@ -104,8 +104,9 @@ public class RoutingHandler {
 			place2 = place3;
 		}
 		place3 = offer.getDestination();
-		setRoutingTime(place1, place2, place3, durations[intermediatePlacesSize - 2],
-				durations[intermediatePlacesSize - 1]);
+		setRoutingTime(place1, place2, place3, durations[intermediatePlacesSize - 1],
+				durations[intermediatePlacesSize]);
+		setRoutingTime(place2, place3, new Place(), durations[intermediatePlacesSize], 0);
 	}
 
 	private void setRoutingTime(Place place1, Place place2, Place place3, int duration2, int duration3) {
