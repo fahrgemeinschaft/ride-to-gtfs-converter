@@ -14,6 +14,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import com.ride2go.ridetogtfsconverter.conversion.LocalDateAttributeConverter;
@@ -28,9 +29,11 @@ public class EntityTrip {
 
 	@Id
 	@Column(name = "tripID")
+	@OrderColumn(name = "ix_trips_tripID")
 	private String tripId;
 
 	@Column(name = "IDuser")
+	// @OrderColumn(name = "ix_trips_IDuser")
 	private String userId;
 
 	@Column(columnDefinition = "ENUM('offer', 'search', '')")
@@ -49,7 +52,7 @@ public class EntityTrip {
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinTable(name = "fg_trips_routing",
-		joinColumns = @JoinColumn(name = "IDtrip"),
+		joinColumns = @JoinColumn(name = "IDtrip"), 
 		inverseJoinColumns = @JoinColumn(name = "routingID"))
 	private List<EntityRouting> routings;
 

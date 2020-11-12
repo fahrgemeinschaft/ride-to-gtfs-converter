@@ -6,6 +6,7 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import com.ride2go.ridetogtfsconverter.conversion.LocalTimeAttributeConverter;
@@ -19,6 +20,7 @@ public class EntityRoutingPlace {
 
 	@Id
 	@Column(name = "placeID")
+	@OrderColumn(name = "ix_trips_routing_places_placeID")
 	private String placeId;
 
 	private String address;

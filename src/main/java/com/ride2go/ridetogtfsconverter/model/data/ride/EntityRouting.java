@@ -7,7 +7,11 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import lombok.Data;
 
@@ -21,13 +25,16 @@ public class EntityRouting {
 	private String routingId;
 
 	@Column(name = "IDtrip")
+	@OrderColumn(name = "ix_trips_routing_IDtrip")
 	private String tripId;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@NotFound(action = NotFoundAction.IGNORE)
 	@JoinColumn(name = "IDorigin")
 	private EntityRoutingPlace origin;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@NotFound(action = NotFoundAction.IGNORE)
 	@JoinColumn(name = "IDdestination")
 	private EntityRoutingPlace destination;
 

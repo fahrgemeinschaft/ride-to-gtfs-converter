@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import com.ride2go.ridetogtfsconverter.conversion.ReoccursDayAttributeConverter;
@@ -17,6 +18,7 @@ public class EntityReoccurs {
 
 	@Id
 	@Column(name = "IDtrip")
+	@OrderColumn(name = "ix_trips_reoccurs_IDtrip")
 	private String tripId;
 
 	@Column(columnDefinition = "TINYINT(1)")
