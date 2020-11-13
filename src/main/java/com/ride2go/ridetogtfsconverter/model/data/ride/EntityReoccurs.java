@@ -1,14 +1,16 @@
 package com.ride2go.ridetogtfsconverter.model.data.ride;
 
+import static java.time.DayOfWeek.*;
+import java.time.DayOfWeek;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
-
 import com.ride2go.ridetogtfsconverter.conversion.ReoccursDayAttributeConverter;
-
 import lombok.Data;
 
 @Data
@@ -51,5 +53,31 @@ public class EntityReoccurs {
 
 	public boolean doesReoccur() {
 		return (mo || tu || we || th || fr || sa || su) ? true : false;
+	}
+
+	public List<DayOfWeek> getReoccurDays() {
+		List<DayOfWeek> reoccurDays = new ArrayList<>();
+		if (mo) {
+			reoccurDays.add(MONDAY);
+		}
+		if (tu) {
+			reoccurDays.add(TUESDAY);
+		}
+		if (we) {
+			reoccurDays.add(WEDNESDAY);
+		}
+		if (th) {
+			reoccurDays.add(THURSDAY);
+		}
+		if (fr) {
+			reoccurDays.add(FRIDAY);
+		}
+		if (sa) {
+			reoccurDays.add(SATURDAY);
+		}
+		if (su) {
+			reoccurDays.add(SUNDAY);
+		}
+		return reoccurDays;
 	}
 }
