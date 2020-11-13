@@ -1,14 +1,18 @@
 package com.ride2go.ridetogtfsconverter.ridesdata;
 
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.YESTERDAY;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_END_DATE;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_START_DATE;
 
+import java.time.DayOfWeek;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.scheduling.annotation.Async;
@@ -33,6 +37,11 @@ public class DBReaderService implements ReaderService {
 
 	@Autowired
 	private TripRepository tripRepository;
+
+	@Value("${custom.gtfs.trips.use-time-period}")
+    private boolean useTimePeriod;
+
+	private static final List<DayOfWeek> FEED_TIME_PERIOD_WEEK_DAYS = getFeedTimePeriodWeekDays();
 
 	private int size;
 
@@ -110,7 +119,7 @@ public class DBReaderService implements ReaderService {
 		EntityTrip trip;
 		for (int i = 0; i < trips.size(); i++) {
 			trip = trips.get(i);
-			if (trip.getStartdate() != null && trip.getStartdate().isAfter(YESTERDAY)) {
+			if (trip.getStartdate() != null && !trip.getStartdate().isBefore(FEED_START_DATE)) {
 				// ongoing
 			} else if (trip.getReoccurs() != null && trip.getReoccurs().doesReoccur()) {
 				// ongoing
@@ -118,8 +127,32 @@ public class DBReaderService implements ReaderService {
 				LOG.info("Remove expired Trip with id: " + trip.getTripId());
 				trips.remove(i);
 				i--;
-				continue;
 			}
 		}
+		if (useTimePeriod) {
+			for (int i = 0; i < trips.size(); i++) {
+				trip = trips.get(i);
+				if (trip.getStartdate() != null && !trip.getStartdate().isAfter(FEED_END_DATE)) {
+					// within period
+				} else if (trip.getReoccurs() != null && !Collections.disjoint(FEED_TIME_PERIOD_WEEK_DAYS, trip.getReoccurs().getReoccurDays())) {
+					// within period
+				} else {
+					LOG.info("Remove Trip after feed time period with id: " + trip.getTripId());
+					trips.remove(i);
+					i--;
+				}
+			}
+		}
+	}
+
+	private static List<DayOfWeek> getFeedTimePeriodWeekDays() {
+		List<DayOfWeek> feedTimePeriodWeekDays = new ArrayList<>();
+		DayOfWeek feedStartDay = FEED_START_DATE.getDayOfWeek();
+		feedTimePeriodWeekDays.add(feedStartDay);
+		int i = 1;
+		while (i < 7 && !FEED_START_DATE.plusDays(i).isAfter(FEED_END_DATE)) {
+			feedTimePeriodWeekDays.add(feedStartDay.plus(i++));
+		}
+		return feedTimePeriodWeekDays;
 	}
 }
