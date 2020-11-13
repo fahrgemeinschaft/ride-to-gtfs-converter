@@ -3,9 +3,9 @@ package com.ride2go.ridetogtfsconverter.gtfs;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.APPROXIMATE_TIMEPOINT;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.EXACT_TIMEPOINT;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.MISCELLANEOUS_SERVICE;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_END_DATE;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_START_DATE;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.ONE_DIRECTION;
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.ONE_MONTH_FROM_TODAY;
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TODAY;
 
 import java.io.File;
 import java.io.IOException;
@@ -167,8 +167,8 @@ public class OBAWriterService implements WriterService {
 		// 'default_lang' field is missing
 		feedInfo.setLang("de");
 		// NPE if optional dates are not set
-		feedInfo.setStartDate(getToday());
-		feedInfo.setEndDate(getOneMonthFromToday());
+		feedInfo.setStartDate(OBA_FEED_START_DATE);
+		feedInfo.setEndDate(OBA_FEED_END_DATE);
 		feedInfo.setVersion("1");
 		return Arrays.asList(feedInfo);
 	}
@@ -229,11 +229,11 @@ public class OBAWriterService implements WriterService {
 			if (offer.getRecurring() != null) {
 				if (offer.getStartDate() != null) {
 					LocalDate startdate = offer.getStartDate();
-					startDate = getByDate(startdate);
+					startDate = OBAWriterParameter.getByDate(startdate);
 				} else {
-					startDate = getToday();
+					startDate = OBA_FEED_START_DATE;
 				}
-				endDate = getOneMonthFromToday();
+				endDate = OBA_FEED_END_DATE;
 				calendar.setStartDate(startDate);
 				calendar.setEndDate(endDate);
 
@@ -247,8 +247,8 @@ public class OBAWriterService implements WriterService {
 				calendar.setSunday(recurring.isSunday() ? 1 : 0);
 			} else {
 				LocalDate startdate = offer.getStartDate();
-				startDate = getByDate(startdate);
-				endDate = getByDate(startdate);
+				startDate = OBAWriterParameter.getByDate(startdate);
+				endDate = OBAWriterParameter.getByDate(startdate);
 				calendar.setStartDate(startDate);
 				calendar.setEndDate(endDate);
 
@@ -324,18 +324,5 @@ public class OBAWriterService implements WriterService {
 		agencyAndId.setAgencyId(agency.getId());
 		agencyAndId.setId(id);
 		return agencyAndId;
-	}
-
-	private ServiceDate getToday() {
-		return new ServiceDate(TODAY.getYear(), TODAY.getMonthValue(), TODAY.getDayOfMonth());
-	}
-
-	private ServiceDate getOneMonthFromToday() {
-		return new ServiceDate(ONE_MONTH_FROM_TODAY.getYear(), ONE_MONTH_FROM_TODAY.getMonthValue(),
-				ONE_MONTH_FROM_TODAY.getDayOfMonth());
-	}
-
-	private ServiceDate getByDate(LocalDate date) {
-		return new ServiceDate(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
 	}
 }
