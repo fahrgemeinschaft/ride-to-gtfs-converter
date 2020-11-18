@@ -4,6 +4,8 @@ import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_END_D
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_START_DATE;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,6 +81,7 @@ public class DBReaderService implements ReaderService {
 		LOG.info("Found {} trips in the database for user: {}", size, userId);
 		tripValidator.validTrips(trips);
 		ongoingTrips(trips);
+		ongoingMissingreoccurs(trips);
 		return trips;
 	}
 
@@ -88,6 +91,7 @@ public class DBReaderService implements ReaderService {
 		LOG.info("Found {} trips in the database for page {}", size, page.getPageNumber());
 		tripValidator.validTrips(trips);
 		ongoingTrips(trips);
+		ongoingMissingreoccurs(trips);
 		return trips;
 	}
 
@@ -154,5 +158,24 @@ public class DBReaderService implements ReaderService {
 			feedTimePeriodWeekDays.add(feedStartDay.plus(i++));
 		}
 		return feedTimePeriodWeekDays;
+	}
+
+	private void ongoingMissingreoccurs(List<EntityTrip> trips) {
+		List<ZonedDateTime> missingreoccurs;
+		LocalDate missingreoccursItem;
+		for (EntityTrip trip : trips) {
+			missingreoccurs = trip.getMissingreoccurs();
+			if (missingreoccurs != null) {
+				for (int i = 0; i < missingreoccurs.size(); i++) {
+					missingreoccursItem = missingreoccurs.get(i).toLocalDate();
+					if (missingreoccursItem.isBefore(FEED_START_DATE)
+							|| (useTimePeriod && missingreoccursItem.isAfter(FEED_END_DATE))) {
+						LOG.info("Remove missingreoccurs day: " + missingreoccursItem);
+						missingreoccurs.remove(i);
+						i--;
+					}
+				}
+			}
+		}
 	}
 }
