@@ -6,10 +6,13 @@ import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.MISCELLANE
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_END_DATE;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_START_DATE;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.ONE_DIRECTION;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.SERVICE_NOT_AVAILABLE;
+import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TIME_ZONE_BERLIN;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +25,7 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.ServiceCalendar;
+import org.onebusaway.gtfs.model.ServiceCalendarDate;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.Trip;
@@ -92,10 +96,11 @@ public class OBAWriterService implements WriterService {
 		addToFile(stops, "stops.txt");
 		addToFile(routes, "routes.txt");
 		addToFile(getCalendars(), "calendar.txt");
+		addToFile(getCalendarDates(), "calendar_dates.txt");
 		addToFile(trips, "trips.txt");
 		addToFile(getStopTimes(), "stop_times.txt");
 
-		LOG.info("Saved {} offers as GTFS", trips.size());
+		LOG.info("Saved a sum of {} offers as GTFS", trips.size());
 	}
 
 	private void init(final List<Offer> offers, final File directory) {
@@ -156,7 +161,7 @@ public class OBAWriterService implements WriterService {
 		agency.setId("agency_1");
 		agency.setName("ride2go");
 		agency.setUrl("http://www.ride2go.com");
-		agency.setTimezone("Europe/Berlin");
+		agency.setTimezone(TIME_ZONE_BERLIN);
 		agency.setLang("de");
 	}
 
@@ -263,6 +268,23 @@ public class OBAWriterService implements WriterService {
 			calendars.add(calendar);
 		}
 		return calendars;
+	}
+	
+	private List<ServiceCalendarDate> getCalendarDates() {
+		List<ServiceCalendarDate> calendarDates = new ArrayList<>();
+		ServiceCalendarDate calendarDate;
+		for (Offer offer : offers) {
+			if (offer.getMissingreoccurs() != null) {
+				for (ZonedDateTime missingreoccursItem : offer.getMissingreoccurs()) {
+					calendarDate = new ServiceCalendarDate();
+					calendarDate.setServiceId(getAgencyAndId("trip_" + offer.getId()));
+					calendarDate.setDate(OBAWriterParameter.getByDateTime(missingreoccursItem));
+					calendarDate.setExceptionType(SERVICE_NOT_AVAILABLE);
+					calendarDates.add(calendarDate);
+				}
+			}
+		}
+		return calendarDates;
 	}
 
 	private void setTrips() {

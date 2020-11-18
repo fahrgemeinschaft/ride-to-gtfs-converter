@@ -4,6 +4,7 @@ import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.ONE_MONTH_
 import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TODAY;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 
@@ -20,6 +21,8 @@ public class OBAWriterParameter {
 
 	protected static final int APPROXIMATE_TIMEPOINT = 0;
 
+	protected static final int SERVICE_NOT_AVAILABLE = 2;
+
 	public static final LocalDate FEED_START_DATE = TODAY;
 
 	public static final LocalDate FEED_END_DATE = ONE_MONTH_FROM_TODAY;
@@ -30,5 +33,9 @@ public class OBAWriterParameter {
 
 	protected static ServiceDate getByDate(LocalDate date) {
 		return new ServiceDate(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
+	}
+
+	protected static ServiceDate getByDateTime(ZonedDateTime dateTime) {
+		return new ServiceDate(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth());
 	}
 }
