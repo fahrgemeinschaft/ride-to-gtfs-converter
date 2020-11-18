@@ -120,6 +120,7 @@ public class OBAWriterService implements WriterService {
 			reader.setEntityStore(dao);
 			Collection<T> oldColllection = (Collection<T>) dao.getAllEntitiesForType(list.get(0).getClass());
 			if (oldColllection != null && oldColllection.size() > 0) {
+				list.removeAll(oldColllection);
 				list.addAll(oldColllection);
 			}
 		} catch (MissingRequiredEntityException e) {
@@ -183,16 +184,22 @@ public class OBAWriterService implements WriterService {
 		for (Offer offer : offers) {
 			place = offer.getOrigin();
 			stop = getStop(place);
-			stops.add(stop);
+			if (!stops.contains(stop)) {
+				stops.add(stop);
+			}
 			if (offer.getIntermediatePlaces() != null) {
 				for (Place intermediatePlace : offer.getIntermediatePlaces()) {
 					stop = getStop(intermediatePlace);
-					stops.add(stop);
+					if (!stops.contains(stop)) {
+						stops.add(stop);
+					}
 				}
 			}
 			place = offer.getDestination();
 			stop = getStop(place);
-			stops.add(stop);
+			if (!stops.contains(stop)) {
+				stops.add(stop);
+			}
 		}
 	}
 
