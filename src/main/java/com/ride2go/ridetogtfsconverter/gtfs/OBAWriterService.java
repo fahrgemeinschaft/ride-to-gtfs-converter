@@ -225,7 +225,9 @@ public class OBAWriterService implements WriterService {
 			route.setType(MISCELLANEOUS_SERVICE);
 			// todo
 			// route.setUrl(url);
-			routes.add(route);
+			if (!routes.contains(route)) {
+				routes.add(route);
+			}
 		}
 	}
 
