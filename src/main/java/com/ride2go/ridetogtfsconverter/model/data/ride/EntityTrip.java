@@ -2,6 +2,7 @@ package com.ride2go.ridetogtfsconverter.model.data.ride;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -19,6 +20,7 @@ import javax.persistence.Table;
 
 import com.ride2go.ridetogtfsconverter.conversion.LocalDateAttributeConverter;
 import com.ride2go.ridetogtfsconverter.conversion.LocalTimeAttributeConverter;
+import com.ride2go.ridetogtfsconverter.conversion.ZonedDateTimeListAttributeConverter;
 
 import lombok.Data;
 
@@ -61,4 +63,8 @@ public class EntityTrip {
 		joinColumns = @JoinColumn(name = "IDtrip"),
 		inverseJoinColumns = @JoinColumn(name = "tripID"))
 	private EntityReoccurs reoccurs;
+
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = ZonedDateTimeListAttributeConverter.class)
+    private List<ZonedDateTime> missingreoccurs;
 }
