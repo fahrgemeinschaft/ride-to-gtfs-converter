@@ -57,6 +57,7 @@ public class OfferConverter {
 				recurring.setSunday(trip.getReoccurs().getSu());
 				offer.setRecurring(recurring);
 			}
+			offer.setMissingreoccurs(trip.getMissingreoccurs());
 			offers.add(offer);
 		}
 		return offers;
