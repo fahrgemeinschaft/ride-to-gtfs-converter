@@ -10,6 +10,7 @@ Define database connection and GTFS option properties in the **application.prope
 * spring.datasource.username
 * spring.datasource.password
 * custom.gtfs.trips.use-time-period
+* custom.gtfs.trip.link
 
 or use environment variables:
 
@@ -17,6 +18,7 @@ or use environment variables:
 * DB_USERNAME
 * DB_PASSWORD
 * GTFS_TRIPS_USE_TIME_PERIOD
+* GTFS_TRIP_LINK
 
 `./gradlew clean bootRun --args 'gtfs_data/ fc35e4a3-3959-8734-e97e-2d4a7577d886'`
 

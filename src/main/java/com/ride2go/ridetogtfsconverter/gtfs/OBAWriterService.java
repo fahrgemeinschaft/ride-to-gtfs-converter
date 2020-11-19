@@ -35,6 +35,7 @@ import org.onebusaway.gtfs.serialization.GtfsWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,9 @@ public class OBAWriterService implements WriterService {
 
 	@Autowired
 	private RoutingHandler routingHandler;
+
+	@Value("${custom.gtfs.trip.link}")
+    private String tripLink;
 
 	private List<Offer> offers;
 
@@ -220,8 +224,7 @@ public class OBAWriterService implements WriterService {
 			route.setAgency(agency);
 			route.setLongName(name);
 			route.setType(MISCELLANEOUS_SERVICE);
-			// todo
-			// route.setUrl(url);
+			route.setUrl(tripLink.replaceAll("\\$id", offer.getId()));
 			routes.add(route);
 		}
 	}
