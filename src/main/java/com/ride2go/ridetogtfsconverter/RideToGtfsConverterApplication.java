@@ -104,12 +104,12 @@ public class RideToGtfsConverterApplication implements CommandLineRunner {
 		while (!stop) {
 			CompletableFuture<List<Offer>>[] completableOffers = (CompletableFuture<List<Offer>>[]) new CompletableFuture<?>[AMOUNT_OF_THREADS];
 			for (int j = 0; j < AMOUNT_OF_THREADS; j++) {
-				Pageable page = PageRequest.of(i * j + j, pageSize, Sort.by(Order.asc("tripId")));
+				Pageable page = PageRequest.of(i * AMOUNT_OF_THREADS + j, pageSize, Sort.by(Order.asc("tripId")));
 				completableOffers[j] = readerService.getOfferPageAsync(page);
 			}
 			CompletableFuture.allOf(completableOffers).join();
 			for (int j = 0; j < completableOffers.length; j++) {
-				if ((i * j + j) * pageSize >= tripCount) {
+				if ((i * AMOUNT_OF_THREADS + j) * pageSize >= tripCount) {
 					stop = true;
 				}
 				writerService.writeOfferDataAsGTFS(completableOffers[j].get(), directory);
@@ -128,7 +128,7 @@ public class RideToGtfsConverterApplication implements CommandLineRunner {
 			LOG.info("User " + (i + 1) + " of " + size + " Users");
 			CompletableFuture<List<Offer>>[] completableOffers = (CompletableFuture<List<Offer>>[]) new CompletableFuture<?>[AMOUNT_OF_THREADS];
 			for (int j = 0; j < AMOUNT_OF_THREADS; j++) {
-				completableOffers[j] = readerService.getOffersByUserIdAsync(userList.get(j).getUserId());
+				completableOffers[j] = readerService.getOffersByUserIdAsync(userList.get(i).getUserId());
 			}
 			CompletableFuture.allOf(completableOffers).join();
 			for (int j = 0; j < completableOffers.length; j++) {
