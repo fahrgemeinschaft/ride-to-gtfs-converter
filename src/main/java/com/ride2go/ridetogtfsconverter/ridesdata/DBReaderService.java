@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.scheduling.annotation.Async;
@@ -27,6 +29,7 @@ import com.ride2go.ridetogtfsconverter.repository.TripRepository;
 import com.ride2go.ridetogtfsconverter.validation.TripValidator;
 
 @Service
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DBReaderService implements ReaderService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DBReaderService.class);
@@ -65,7 +68,7 @@ public class DBReaderService implements ReaderService {
 		List<EntityTrip> trips = getValidRelevantAndOngoingOffers(page);
 		List<Offer> offers = offerConverter.fromTripToOffer(trips);
 		if (size > 0) {
-			LOG.info("Using {} valid, relevant and ongoing user offers having all required fields", trips.size());
+			LOG.info("Using {} valid, relevant and ongoing offers having all required fields", trips.size());
 		}
 		return offers;
 	}
