@@ -3,13 +3,16 @@ package com.ride2go.ridetogtfsconverter.gtfs;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.APPROXIMATE_TIMEPOINT;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.EXACT_TIMEPOINT;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.MISCELLANEOUS_SERVICE;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_END_DATE;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_START_DATE;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.ONE_DIRECTION;
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.ONE_MONTH_FROM_TODAY;
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TODAY;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.SERVICE_NOT_AVAILABLE;
+import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TIME_ZONE_BERLIN;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +25,7 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.ServiceCalendar;
+import org.onebusaway.gtfs.model.ServiceCalendarDate;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.Trip;
@@ -31,6 +35,9 @@ import org.onebusaway.gtfs.serialization.GtfsWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
@@ -39,6 +46,7 @@ import com.ride2go.ridetogtfsconverter.model.item.Recurring;
 import com.ride2go.ridetogtfsconverter.routing.RoutingHandler;
 
 @Service
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class OBAWriterService implements WriterService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OBAWriterService.class);
@@ -46,21 +54,20 @@ public class OBAWriterService implements WriterService {
 	@Autowired
 	private RoutingHandler routingHandler;
 
+	@Value("${custom.gtfs.trip.link}")
+    private String tripLink;
+
 	private List<Offer> offers;
 
 	private File directory;
 
-	private Agency agency = new Agency();
+	private Agency agency;
 
-	private AgencyAndId agencyAndId;
+	private List<Stop> stops;
 
-	private List<Stop> stops = new ArrayList<>();
+	private List<Route> routes;
 
-	private Stop stop;
-
-	private List<Route> routes = new ArrayList<>();
-
-	private List<Trip> trips = new ArrayList<>();
+	private List<Trip> trips;
 
 	public void writeProviderInfoAsGTFS(final File directory) {
 		init(null, directory);
@@ -92,6 +99,7 @@ public class OBAWriterService implements WriterService {
 		addToFile(stops, "stops.txt");
 		addToFile(routes, "routes.txt");
 		addToFile(getCalendars(), "calendar.txt");
+		addToFile(getCalendarDates(), "calendar_dates.txt");
 		addToFile(trips, "trips.txt");
 		addToFile(getStopTimes(), "stop_times.txt");
 
@@ -101,21 +109,26 @@ public class OBAWriterService implements WriterService {
 	private void init(final List<Offer> offers, final File directory) {
 		this.offers = offers;
 		this.directory = directory;
+		stops = new ArrayList<>();
+		routes = new ArrayList<>();
+		trips = new ArrayList<>();
 	}
 
-	private <T> void addToFile(List<T> list, final String f) {
+	private <T> void addToFile(final List<T> list, final String f) {
 		if (list.size() == 0) {
 			return;
 		}
 
 		GtfsReader reader = new GtfsReader();
 		GtfsRelationalDaoImpl dao = new GtfsRelationalDaoImpl();
+		List<T> listToSave = new ArrayList<>(list);
 		try {
 			reader.setInputLocation(directory);
 			reader.setEntityStore(dao);
 			Collection<T> oldColllection = (Collection<T>) dao.getAllEntitiesForType(list.get(0).getClass());
 			if (oldColllection != null && oldColllection.size() > 0) {
-				list.addAll(oldColllection);
+				listToSave.removeAll(oldColllection);
+				listToSave.addAll(oldColllection);
 			}
 		} catch (MissingRequiredEntityException e) {
 			LOG.info("File {} has no entries yet" + f);
@@ -136,7 +149,7 @@ public class OBAWriterService implements WriterService {
 		} catch (IOException e) {
 			LOG.error("Problem closing GtfsReader: " + e.getMessage());
 		}
-		writeFile(list, f);
+		writeFile(listToSave, f);
 	}
 
 	private <T> void writeFile(final List<T> list, final String f) {
@@ -153,10 +166,11 @@ public class OBAWriterService implements WriterService {
 	}
 
 	private void setAgency() {
+		agency = new Agency();
 		agency.setId("agency_1");
 		agency.setName("ride2go");
 		agency.setUrl("http://www.ride2go.com");
-		agency.setTimezone("Europe/Berlin");
+		agency.setTimezone(TIME_ZONE_BERLIN);
 		agency.setLang("de");
 	}
 
@@ -167,8 +181,8 @@ public class OBAWriterService implements WriterService {
 		// 'default_lang' field is missing
 		feedInfo.setLang("de");
 		// NPE if optional dates are not set
-		feedInfo.setStartDate(getToday());
-		feedInfo.setEndDate(getOneMonthFromToday());
+		feedInfo.setStartDate(OBA_FEED_START_DATE);
+		feedInfo.setEndDate(OBA_FEED_END_DATE);
 		feedInfo.setVersion("1");
 		return Arrays.asList(feedInfo);
 	}
@@ -177,23 +191,23 @@ public class OBAWriterService implements WriterService {
 		Place place;
 		for (Offer offer : offers) {
 			place = offer.getOrigin();
-			stop = getStop(place);
-			stops.add(stop);
+			Stop originStop = getStop(place);
+			stops.add(originStop);
 			if (offer.getIntermediatePlaces() != null) {
 				for (Place intermediatePlace : offer.getIntermediatePlaces()) {
-					stop = getStop(intermediatePlace);
-					stops.add(stop);
+					Stop intermediateStop = getStop(intermediatePlace);
+					stops.add(intermediateStop);
 				}
 			}
 			place = offer.getDestination();
-			stop = getStop(place);
-			stops.add(stop);
+			Stop destinationStop = getStop(place);
+			stops.add(destinationStop);
 		}
 	}
 
 	private Stop getStop(Place place) {
-		stop = new Stop();
-		stop.setId(getAgencyAndId("place_" + place.getId()));
+		Stop stop = new Stop();
+		stop.setId(getAgencyAndId("stop_" + place.getId()));
 		stop.setName(place.getAddress());
 		stop.setLat(place.getGeoCoordinates().getLatitude());
 		stop.setLon(place.getGeoCoordinates().getLongitude());
@@ -201,39 +215,36 @@ public class OBAWriterService implements WriterService {
 	}
 
 	private void setRoutes() {
-		Route route;
 		String name;
 		for (Offer offer : offers) {
 			name = offer.getOrigin().getAddress() + " -> " + offer.getDestination().getAddress();
 
-			route = new Route();
-			route.setId(getAgencyAndId("trip_" + offer.getId()));
+			Route route = new Route();
+			route.setId(getAgencyAndId("route_" + offer.getId()));
 			route.setAgency(agency);
 			route.setLongName(name);
 			route.setType(MISCELLANEOUS_SERVICE);
-			// todo
-			// route.setUrl(url);
+			route.setUrl(tripLink.replaceAll("\\$id", offer.getId()));
 			routes.add(route);
 		}
 	}
 
 	private List<ServiceCalendar> getCalendars() {
 		List<ServiceCalendar> calendars = new ArrayList<>();
-		ServiceCalendar calendar;
 		Recurring recurring;
-		ServiceDate startDate, endDate;
 		for (Offer offer : offers) {
-			calendar = new ServiceCalendar();
-			calendar.setServiceId(getAgencyAndId("trip_" + offer.getId()));
+			ServiceCalendar calendar = new ServiceCalendar();
+			calendar.setServiceId(getAgencyAndId("service_" + offer.getId()));
 
 			if (offer.getRecurring() != null) {
+				ServiceDate startDate;
 				if (offer.getStartDate() != null) {
 					LocalDate startdate = offer.getStartDate();
-					startDate = getByDate(startdate);
+					startDate = OBAWriterParameter.getByDate(startdate);
 				} else {
-					startDate = getToday();
+					startDate = OBA_FEED_START_DATE;
 				}
-				endDate = getOneMonthFromToday();
+				ServiceDate endDate = OBA_FEED_END_DATE;
 				calendar.setStartDate(startDate);
 				calendar.setEndDate(endDate);
 
@@ -247,8 +258,8 @@ public class OBAWriterService implements WriterService {
 				calendar.setSunday(recurring.isSunday() ? 1 : 0);
 			} else {
 				LocalDate startdate = offer.getStartDate();
-				startDate = getByDate(startdate);
-				endDate = getByDate(startdate);
+				ServiceDate startDate = OBAWriterParameter.getByDate(startdate);
+				ServiceDate endDate = OBAWriterParameter.getByDate(startdate);
 				calendar.setStartDate(startDate);
 				calendar.setEndDate(endDate);
 
@@ -264,21 +275,36 @@ public class OBAWriterService implements WriterService {
 		}
 		return calendars;
 	}
+	
+	private List<ServiceCalendarDate> getCalendarDates() {
+		List<ServiceCalendarDate> calendarDates = new ArrayList<>();
+		for (Offer offer : offers) {
+			if (offer.getMissingreoccurs() != null) {
+				for (ZonedDateTime missingreoccursItem : offer.getMissingreoccurs()) {
+					ServiceCalendarDate  calendarDate = new ServiceCalendarDate();
+					calendarDate.setServiceId(getAgencyAndId("service_" + offer.getId()));
+					calendarDate.setDate(OBAWriterParameter.getByDateTime(missingreoccursItem));
+					calendarDate.setExceptionType(SERVICE_NOT_AVAILABLE);
+					calendarDates.add(calendarDate);
+				}
+			}
+		}
+		return calendarDates;
+	}
 
 	private void setTrips() {
-		Trip trip;
 		Offer offer;
-		AgencyAndId id;
 		String tripHeadsign;
 		for (int i = 0; i < offers.size(); i++) {
 			offer = offers.get(i);
-			id = getAgencyAndId("trip_" + offer.getId());
+			AgencyAndId tripId = getAgencyAndId("trip_" + offer.getId());
+			AgencyAndId serviceId = getAgencyAndId("service_" + offer.getId());
 			tripHeadsign = offer.getDestination().getAddress();
 
-			trip = new Trip();
-			trip.setId(id);
+			Trip trip = new Trip();
+			trip.setId(tripId);
 			trip.setRoute(routes.get(i));
-			trip.setServiceId(id);
+			trip.setServiceId(serviceId);
 			trip.setDirectionId(ONE_DIRECTION);
 			trip.setTripHeadsign(tripHeadsign);
 			trips.add(trip);
@@ -287,23 +313,22 @@ public class OBAWriterService implements WriterService {
 
 	private List<StopTime> getStopTimes() {
 		List<StopTime> stopTimes = new ArrayList<>();
-		StopTime stopTime;
 		Offer offer;
 		int stopSequenzIndex;
 		int stopIndex = 0;
 		for (int i = 0; i < offers.size(); i++) {
 			offer = offers.get(i);
 			stopSequenzIndex = 0;
-			stopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, offer.getOrigin().getTimeInSeconds());
-			stopTimes.add(stopTime);
+			StopTime originStopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, offer.getOrigin().getTimeInSeconds());
+			stopTimes.add(originStopTime);
 			if (offer.getIntermediatePlaces() != null) {
 				for (Place intermediatePlace : offer.getIntermediatePlaces()) {
-					stopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, intermediatePlace.getTimeInSeconds());
-					stopTimes.add(stopTime);
+					StopTime intermediateStopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, intermediatePlace.getTimeInSeconds());
+					stopTimes.add(intermediateStopTime);
 				}
 			}
-			stopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, offer.getDestination().getTimeInSeconds());
-			stopTimes.add(stopTime);
+			StopTime destinationStopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, offer.getDestination().getTimeInSeconds());
+			stopTimes.add(destinationStopTime);
 		}
 		return stopTimes;
 	}
@@ -320,22 +345,9 @@ public class OBAWriterService implements WriterService {
 	}
 
 	private AgencyAndId getAgencyAndId(String id) {
-		agencyAndId = new AgencyAndId();
+		AgencyAndId agencyAndId = new AgencyAndId();
 		agencyAndId.setAgencyId(agency.getId());
 		agencyAndId.setId(id);
 		return agencyAndId;
-	}
-
-	private ServiceDate getToday() {
-		return new ServiceDate(TODAY.getYear(), TODAY.getMonthValue(), TODAY.getDayOfMonth());
-	}
-
-	private ServiceDate getOneMonthFromToday() {
-		return new ServiceDate(ONE_MONTH_FROM_TODAY.getYear(), ONE_MONTH_FROM_TODAY.getMonthValue(),
-				ONE_MONTH_FROM_TODAY.getDayOfMonth());
-	}
-
-	private ServiceDate getByDate(LocalDate date) {
-		return new ServiceDate(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
 	}
 }

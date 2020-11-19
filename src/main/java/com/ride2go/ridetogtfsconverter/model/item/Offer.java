@@ -1,7 +1,7 @@
 package com.ride2go.ridetogtfsconverter.model.item;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import lombok.Data;
@@ -20,4 +20,6 @@ public class Offer {
 	private List<Place> intermediatePlaces;
 
 	private Recurring recurring;
+
+	private List<ZonedDateTime> missingreoccurs;
 }

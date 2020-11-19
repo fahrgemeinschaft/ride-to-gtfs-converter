@@ -2,6 +2,7 @@ package com.ride2go.ridetogtfsconverter.model.data.ride;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -14,10 +15,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import com.ride2go.ridetogtfsconverter.conversion.LocalDateAttributeConverter;
 import com.ride2go.ridetogtfsconverter.conversion.LocalTimeAttributeConverter;
+import com.ride2go.ridetogtfsconverter.conversion.ZonedDateTimeListAttributeConverter;
 
 import lombok.Data;
 
@@ -28,9 +31,11 @@ public class EntityTrip {
 
 	@Id
 	@Column(name = "tripID")
+	@OrderColumn(name = "ix_trips_tripID")
 	private String tripId;
 
 	@Column(name = "IDuser")
+	// @OrderColumn(name = "ix_trips_IDuser")
 	private String userId;
 
 	@Column(columnDefinition = "ENUM('offer', 'search', '')")
@@ -49,7 +54,7 @@ public class EntityTrip {
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinTable(name = "fg_trips_routing",
-		joinColumns = @JoinColumn(name = "IDtrip"),
+		joinColumns = @JoinColumn(name = "IDtrip"), 
 		inverseJoinColumns = @JoinColumn(name = "routingID"))
 	private List<EntityRouting> routings;
 
@@ -58,4 +63,8 @@ public class EntityTrip {
 		joinColumns = @JoinColumn(name = "IDtrip"),
 		inverseJoinColumns = @JoinColumn(name = "tripID"))
 	private EntityReoccurs reoccurs;
+
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = ZonedDateTimeListAttributeConverter.class)
+    private List<ZonedDateTime> missingreoccurs;
 }
