@@ -13,13 +13,17 @@ public class Offer {
 
 	private LocalDate startDate;
 
-	private Place origin;
-
-	private Place destination;
-
-	private List<Place> intermediatePlaces;
+	private List<Place> places;
 
 	private Recurring recurring;
 
 	private List<ZonedDateTime> missingreoccurs;
+
+	public Place getOrigin() {
+		return places.get(0);
+	}
+
+	public Place getDestination() {
+		return places.get(places.size() - 1);
+	}
 }
