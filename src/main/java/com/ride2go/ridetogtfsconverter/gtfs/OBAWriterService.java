@@ -34,7 +34,6 @@ import org.onebusaway.gtfs.serialization.GtfsReader;
 import org.onebusaway.gtfs.serialization.GtfsWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -43,16 +42,12 @@ import org.springframework.stereotype.Service;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.model.item.Place;
 import com.ride2go.ridetogtfsconverter.model.item.Recurring;
-import com.ride2go.ridetogtfsconverter.routing.RoutingHandler;
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class OBAWriterService implements WriterService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OBAWriterService.class);
-
-	@Autowired
-	private RoutingHandler routingHandler;
 
 	@Value("${custom.gtfs.trip.link}")
     private String tripLink;
@@ -85,12 +80,6 @@ public class OBAWriterService implements WriterService {
 
 		init(offers, directory);
 
-		routingHandler.setRoutingInformation(this.offers);
-
-		if (this.offers.size() == 0) {
-			return;
-		}
-
 		setAgency();
 		setStops();
 		setRoutes();
@@ -114,7 +103,7 @@ public class OBAWriterService implements WriterService {
 		trips = new ArrayList<>();
 	}
 
-	private <T> void addToFile(final List<T> list, final String f) {
+	private <T> void addToFile(final List<T> list, String f) {
 		if (list.size() == 0) {
 			return;
 		}
@@ -125,15 +114,18 @@ public class OBAWriterService implements WriterService {
 		try {
 			reader.setInputLocation(directory);
 			reader.setEntityStore(dao);
-			Collection<T> oldColllection = (Collection<T>) dao.getAllEntitiesForType(list.get(0).getClass());
-			if (oldColllection != null && oldColllection.size() > 0) {
-				listToSave.removeAll(oldColllection);
-				listToSave.addAll(oldColllection);
+		    reader.run();
+		    Collection<T> savedCollection = (Collection<T>) dao.getAllEntitiesForType(list.get(0).getClass());
+		    LOG.info(f + " savedCollection.size(): " + savedCollection.size());
+			if (savedCollection != null && savedCollection.size() > 0) {
+				listToSave.removeAll(savedCollection);
+				listToSave.addAll(savedCollection);
 			}
 		} catch (MissingRequiredEntityException e) {
-			LOG.info("File {} has no entries yet" + f);
+			LOG.info("File {} has no entries yet", f);
 		} catch (IOException e) {
-			LOG.error("Problem getting entries out of file {}: {}" + f, e.getMessage());
+			LOG.error("Problem getting entries out of file {}: {}", f, e.getMessage());
+			e.printStackTrace();
 		}
 		try {
 			if (dao != null) {
@@ -152,7 +144,7 @@ public class OBAWriterService implements WriterService {
 		writeFile(listToSave, f);
 	}
 
-	private <T> void writeFile(final List<T> list, final String f) {
+	private <T> void writeFile(final List<T> list, String f) {
 		GtfsWriter writer = new GtfsWriter();
 		writer.setOutputLocation(directory);
 		for (T item : list) {
@@ -188,24 +180,15 @@ public class OBAWriterService implements WriterService {
 	}
 
 	private void setStops() {
-		Place place;
 		for (Offer offer : offers) {
-			place = offer.getOrigin();
-			Stop originStop = getStop(place);
-			stops.add(originStop);
-			if (offer.getIntermediatePlaces() != null) {
-				for (Place intermediatePlace : offer.getIntermediatePlaces()) {
-					Stop intermediateStop = getStop(intermediatePlace);
-					stops.add(intermediateStop);
-				}
+			for (Place place : offer.getPlaces()) {
+				Stop stop = getStop(place);
+				stops.add(stop);
 			}
-			place = offer.getDestination();
-			Stop destinationStop = getStop(place);
-			stops.add(destinationStop);
 		}
 	}
 
-	private Stop getStop(Place place) {
+	private Stop getStop(final Place place) {
 		Stop stop = new Stop();
 		stop.setId(getAgencyAndId("stop_" + place.getId()));
 		stop.setName(place.getAddress());
@@ -313,22 +296,14 @@ public class OBAWriterService implements WriterService {
 
 	private List<StopTime> getStopTimes() {
 		List<StopTime> stopTimes = new ArrayList<>();
-		Offer offer;
 		int stopSequenzIndex;
 		int stopIndex = 0;
 		for (int i = 0; i < offers.size(); i++) {
-			offer = offers.get(i);
 			stopSequenzIndex = 0;
-			StopTime originStopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, offer.getOrigin().getTimeInSeconds());
-			stopTimes.add(originStopTime);
-			if (offer.getIntermediatePlaces() != null) {
-				for (Place intermediatePlace : offer.getIntermediatePlaces()) {
-					StopTime intermediateStopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, intermediatePlace.getTimeInSeconds());
-					stopTimes.add(intermediateStopTime);
-				}
+			for (Place place : offers.get(i).getPlaces()) {
+				StopTime stopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, place.getTimeInSeconds());
+				stopTimes.add(stopTime);
 			}
-			StopTime destinationStopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, offer.getDestination().getTimeInSeconds());
-			stopTimes.add(destinationStopTime);
 		}
 		return stopTimes;
 	}
