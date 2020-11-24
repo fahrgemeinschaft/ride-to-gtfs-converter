@@ -6,6 +6,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.model.data.ride.EntityRoutingPlace;
@@ -16,38 +18,35 @@ import com.ride2go.ridetogtfsconverter.model.item.Place;
 import com.ride2go.ridetogtfsconverter.model.item.Recurring;
 
 @Service
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class OfferConverter {
 
 	private int previousTimeInSeconds;
 
 	public List<Offer> fromTripToOffer(final List<EntityTrip> trips) {
 		List<Offer> offers = new ArrayList<>();
-		Offer offer;
-		Place place;
 		int last;
-		List<Place> places;
-		Recurring recurring;
 		for (EntityTrip trip : trips) {
-			offer = new Offer();
+			Offer offer = new Offer();
 			offer.setId(trip.getTripId());
 			offer.setStartDate(trip.getStartdate());
 			last = trip.getRoutings().size() - 1;
-			place = getPlace(trip.getRoutings().get(last).getOrigin());
-			place.setTimeInSeconds(trip.getStarttime().toSecondOfDay());
-			previousTimeInSeconds = place.getTimeInSeconds();
-			offer.setOrigin(place);
+			Place originPlace = getPlace(trip.getRoutings().get(last).getOrigin());
+			originPlace.setTimeInSeconds(trip.getStarttime().toSecondOfDay());
+			previousTimeInSeconds = originPlace.getTimeInSeconds();
+			List<Place> places = new ArrayList<>();
+			places.add(originPlace);
 			if (trip.getRoutings().size() > 1) {
-				places = new ArrayList<>();
 				for (int i = 0; i < trip.getRoutings().size() - 2; i++) {
-					place = getPlace(trip.getRoutings().get(i).getDestination());
-					places.add(place);
+					Place intermediatePlace = getPlace(trip.getRoutings().get(i).getDestination());
+					places.add(intermediatePlace);
 				}
-				offer.setIntermediatePlaces(places);
 			}
-			place = getPlace(trip.getRoutings().get(last).getDestination());
-			offer.setDestination(place);
+			Place destinationPlace = getPlace(trip.getRoutings().get(last).getDestination());
+			places.add(destinationPlace);
+			offer.setPlaces(places);
 			if (trip.getReoccurs().doesReoccur()) {
-				recurring = new Recurring();
+				Recurring recurring = new Recurring();
 				recurring.setMonday(trip.getReoccurs().getMo());
 				recurring.setTuesday(trip.getReoccurs().getTu());
 				recurring.setWednesday(trip.getReoccurs().getWe());
