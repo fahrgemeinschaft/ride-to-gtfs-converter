@@ -9,6 +9,8 @@ import com.ride2go.ridetogtfsconverter.model.data.ride.EntityTrip;
 
 public interface TripRepository extends CrudRepository<EntityTrip, String> {
 
+	long countByTriptypeAndRelevance(String triptype, Integer relevance);
+
 	List<EntityTrip> findByUserIdAndTriptypeAndRelevance(String userId, String triptype, Integer relevance);
 
 	List<EntityTrip> findByTriptypeAndRelevance(String triptype, Integer relevance, Pageable pageable);
