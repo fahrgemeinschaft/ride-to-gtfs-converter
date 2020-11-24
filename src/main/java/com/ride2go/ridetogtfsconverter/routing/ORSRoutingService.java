@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
 import com.ride2go.ridetogtfsconverter.exception.WebClientException;
@@ -31,6 +30,10 @@ public class ORSRoutingService extends RoutingService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ORSRoutingService.class);
 
+	private static final Class<GeoJSONRouteResponse> RESPONSE_CLASS = GeoJSONRouteResponse.class;
+
+	private static final GeoJSONRouteResponse FALLBACK_RESPONSE = new GeoJSONRouteResponse();
+
 	private static final String MESSAGE = "ORS response body element ";
 
 	public Response calculateRoute(final Request request) {
@@ -38,9 +41,11 @@ public class ORSRoutingService extends RoutingService {
 		try {
 			check(request);
 			String uri = getUri(request);
-			ClientResponse clientResponse = getRequest(uri);
-			GeoJSONRouteResponse orsResponse = clientResponse.bodyToMono(GeoJSONRouteResponse.class)
+			GeoJSONRouteResponse orsResponse = getRequest(uri, RESPONSE_CLASS, FALLBACK_RESPONSE)
 					.block();
+			if (FALLBACK_RESPONSE.equals(orsResponse)) {
+				return response;
+			}
 			if (orsResponse == null) {
 				throw new RoutingException("response body is null");
 			}
@@ -58,8 +63,6 @@ public class ORSRoutingService extends RoutingService {
 			convert(feature, response);
 		} catch (WebClientException | RoutingException e) {
 			LOG.error("ORS routing error: " + e.getMessage());
-		} catch (Exception e) {
-			LOG.error("WebClient problem: {}: {}: {}", e.getClass(), e.getCause(), e.getMessage());
 		}
 		return response;
 	}
