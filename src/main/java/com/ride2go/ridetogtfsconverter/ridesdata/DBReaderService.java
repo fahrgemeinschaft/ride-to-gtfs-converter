@@ -1,20 +1,12 @@
 package com.ride2go.ridetogtfsconverter.ridesdata;
 
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_END_DATE;
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_START_DATE;
-
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +18,7 @@ import com.ride2go.ridetogtfsconverter.conversion.OfferConverter;
 import com.ride2go.ridetogtfsconverter.model.data.ride.EntityTrip;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.repository.TripRepository;
+import com.ride2go.ridetogtfsconverter.validation.Constraints;
 import com.ride2go.ridetogtfsconverter.validation.TripValidator;
 
 @Service
@@ -34,6 +27,13 @@ public class DBReaderService implements ReaderService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DBReaderService.class);
 
+	private static final String TRIPTYPE_OFFER = "offer";
+
+	private static final Integer RELEVANCE_SEARCHABLE = 10;
+
+	@Autowired
+	private TripRepository tripRepository;
+
 	@Autowired
 	private OfferConverter offerConverter;
 
@@ -41,50 +41,39 @@ public class DBReaderService implements ReaderService {
 	private TripValidator tripValidator;
 
 	@Autowired
-	private TripRepository tripRepository;
-
-	@Value("${custom.gtfs.trips.use-time-period}")
-    private boolean useTimePeriod;
-
-	private static final List<DayOfWeek> FEED_TIME_PERIOD_WEEK_DAYS = getFeedTimePeriodWeekDays();
+	Constraints constraints;
 
 	private int size;
 
-	public List<Offer> getOffersByUserId(final String userId) {
+	public List<Offer> getOffersByUserId(String userId) {
 		List<EntityTrip> trips = getValidRelevantAndOngoingUserOffers(userId);
-		List<Offer> offers = offerConverter.fromTripToOffer(trips);
-		if (size > 0) {
-			LOG.info("Using {} valid, relevant and ongoing user offers having all required fields", trips.size());
-		}
+		List<Offer> offers = convert(trips);
+		constraints.withinArea(offers);
 		return offers;
 	}
 
-	@Async
-	public CompletableFuture<List<Offer>> getOffersByUserIdAsync(final String userId) {
-		return CompletableFuture.completedFuture(getOffersByUserId(userId));
-	}
-
-	public List<Offer> getOfferPage(final Pageable page) {
-		List<EntityTrip> trips = getValidRelevantAndOngoingOffers(page);
-		List<Offer> offers = offerConverter.fromTripToOffer(trips);
-		if (size > 0) {
-			LOG.info("Using {} valid, relevant and ongoing offers having all required fields", trips.size());
-		}
-		return offers;
+	public long getOfferByTriptypeAndRelevanceCount() {
+		return tripRepository.countByTriptypeAndRelevance(TRIPTYPE_OFFER, RELEVANCE_SEARCHABLE);
 	}
 
 	@Async
 	public CompletableFuture<List<Offer>> getOfferPageAsync(final Pageable page) {
-		return CompletableFuture.completedFuture(getOfferPage(page));
+		return CompletableFuture.completedFuture(
+				getOfferPage(page));
 	}
 
-	private List<EntityTrip> getValidRelevantAndOngoingUserOffers(final String userId) {
+	private List<Offer> getOfferPage(final Pageable page) {
+		List<EntityTrip> trips = getValidRelevantAndOngoingOffers(page);
+		List<Offer> offers = convert(trips);
+		constraints.withinArea(offers);
+		return offers;
+	}
+
+	private List<EntityTrip> getValidRelevantAndOngoingUserOffers(String userId) {
 		List<EntityTrip> trips = getOfferList(userId);
 		size = trips.size();
 		LOG.info("Found {} trips in the database for user: {}", size, userId);
-		tripValidator.validTrips(trips);
-		ongoingTrips(trips);
-		ongoingMissingreoccurs(trips);
+		check(trips);
 		return trips;
 	}
 
@@ -92,17 +81,19 @@ public class DBReaderService implements ReaderService {
 		List<EntityTrip> trips = getOfferList(page);
 		size = trips.size();
 		LOG.info("Found {} trips in the database for page {}", size, page.getPageNumber());
-		tripValidator.validTrips(trips);
-		ongoingTrips(trips);
-		ongoingMissingreoccurs(trips);
+		check(trips);
 		return trips;
 	}
 
-	private static final String TRIPTYPE_OFFER = "offer";
+	private List<Offer> convert(List<EntityTrip> trips) {
+		List<Offer> offers = offerConverter.fromTripToOffer(trips);
+		if (size > 0) {
+			LOG.info("Using {} valid, relevant and ongoing offers having all required fields", trips.size());
+		}
+		return offers;
+	}
 
-	private static final Integer RELEVANCE_SEARCHABLE = 10;
-
-	private List<EntityTrip> getOfferList(final String userId) {
+	private List<EntityTrip> getOfferList(String userId) {
 		List<EntityTrip> offers = null;
 		try {
 			offers = tripRepository.findByUserIdAndTriptypeAndRelevance(userId, TRIPTYPE_OFFER, RELEVANCE_SEARCHABLE);
@@ -122,63 +113,9 @@ public class DBReaderService implements ReaderService {
 		return (offers == null) ? new ArrayList<>() : offers;
 	}
 
-	private void ongoingTrips(List<EntityTrip> trips) {
-		EntityTrip trip;
-		for (int i = 0; i < trips.size(); i++) {
-			trip = trips.get(i);
-			if (trip.getStartdate() != null && !trip.getStartdate().isBefore(FEED_START_DATE)) {
-				// ongoing
-			} else if (trip.getReoccurs() != null && trip.getReoccurs().doesReoccur()) {
-				// ongoing
-			} else {
-				LOG.info("Remove expired Trip with id: " + trip.getTripId());
-				trips.remove(i);
-				i--;
-			}
-		}
-		if (useTimePeriod) {
-			for (int i = 0; i < trips.size(); i++) {
-				trip = trips.get(i);
-				if (trip.getStartdate() != null && !trip.getStartdate().isAfter(FEED_END_DATE)) {
-					// within period
-				} else if (trip.getReoccurs() != null && !Collections.disjoint(FEED_TIME_PERIOD_WEEK_DAYS, trip.getReoccurs().getReoccurDays())) {
-					// within period
-				} else {
-					LOG.info("Remove Trip after feed time period with id: " + trip.getTripId());
-					trips.remove(i);
-					i--;
-				}
-			}
-		}
-	}
-
-	private static List<DayOfWeek> getFeedTimePeriodWeekDays() {
-		List<DayOfWeek> feedTimePeriodWeekDays = new ArrayList<>();
-		DayOfWeek feedStartDay = FEED_START_DATE.getDayOfWeek();
-		feedTimePeriodWeekDays.add(feedStartDay);
-		int i = 1;
-		while (i < 7 && !FEED_START_DATE.plusDays(i).isAfter(FEED_END_DATE)) {
-			feedTimePeriodWeekDays.add(feedStartDay.plus(i++));
-		}
-		return feedTimePeriodWeekDays;
-	}
-
-	private void ongoingMissingreoccurs(List<EntityTrip> trips) {
-		List<ZonedDateTime> missingreoccurs;
-		LocalDate missingreoccursItem;
-		for (EntityTrip trip : trips) {
-			missingreoccurs = trip.getMissingreoccurs();
-			if (missingreoccurs != null) {
-				for (int i = 0; i < missingreoccurs.size(); i++) {
-					missingreoccursItem = missingreoccurs.get(i).toLocalDate();
-					if (missingreoccursItem.isBefore(FEED_START_DATE)
-							|| (useTimePeriod && missingreoccursItem.isAfter(FEED_END_DATE))) {
-						LOG.info("Remove missingreoccurs day: " + missingreoccursItem);
-						missingreoccurs.remove(i);
-						i--;
-					}
-				}
-			}
-		}
+	private void check(List<EntityTrip> trips) {
+		tripValidator.validTrips(trips);
+		constraints.ongoingTrips(trips);
+		constraints.ongoingMissingreoccurs(trips);
 	}
 }
