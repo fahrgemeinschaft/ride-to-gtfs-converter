@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -21,10 +22,11 @@ public class RoutingHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RoutingHandler.class);
 
+	@Value("${custom.routing.service}")
+	private String routingRervice;
+
 	@Autowired
-	// @Qualifier("GH")
-	// @Qualifier("ORS")
-	@Qualifier("OSRM")
+	@Qualifier("configured")
 	private RoutingService routingService;
 
 	private Request routingRequest = new Request();
