@@ -125,7 +125,6 @@ public class OBAWriterService implements WriterService {
 			reader.setEntityStore(dao);
 		    reader.run();
 		    Collection<T> savedCollection = (Collection<T>) dao.getAllEntitiesForType(list.get(0).getClass());
-		    LOG.info(f + " savedCollection.size(): " + savedCollection.size());
 			if (savedCollection != null && savedCollection.size() > 0) {
 				listToSave.removeAll(savedCollection);
 				listToSave.addAll(savedCollection);
