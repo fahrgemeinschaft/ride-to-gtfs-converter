@@ -7,7 +7,6 @@ import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_E
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_START_DATE;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.ONE_DIRECTION;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.SERVICE_NOT_AVAILABLE;
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TIME_ZONE_BERLIN;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,11 +33,15 @@ import org.onebusaway.gtfs.serialization.GtfsReader;
 import org.onebusaway.gtfs.serialization.GtfsWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.ride2go.ridetogtfsconverter.configuration.GtfsAgencyProperties;
+import com.ride2go.ridetogtfsconverter.configuration.GtfsFeedinfoProperties;
+import com.ride2go.ridetogtfsconverter.configuration.GtfsFeedinfoProperties.Feedinfo;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.model.item.Place;
 import com.ride2go.ridetogtfsconverter.model.item.Recurring;
@@ -51,6 +54,12 @@ public class OBAWriterService implements WriterService {
 
 	@Value("${custom.gtfs.trip.link}")
     private String tripLink;
+
+	@Autowired
+	private GtfsAgencyProperties agencyProperties;
+
+	@Autowired
+	private GtfsFeedinfoProperties gtfsFeedInfoProperties;
 
 	private List<Offer> offers;
 
@@ -159,24 +168,32 @@ public class OBAWriterService implements WriterService {
 
 	private void setAgency() {
 		agency = new Agency();
-		agency.setId("agency_1");
-		agency.setName("ride2go");
-		agency.setUrl("http://www.ride2go.com");
-		agency.setTimezone(TIME_ZONE_BERLIN);
-		agency.setLang("de");
+		agency.setId(agencyProperties.getId());
+		agency.setName(agencyProperties.getName());
+		agency.setUrl(agencyProperties.getUrl());
+		agency.setTimezone(agencyProperties.getTimezone());
+		agency.setLang(agencyProperties.getLang());
+		agency.setPhone(agencyProperties.getPhone());
+		agency.setFareUrl(agencyProperties.getFareurl());
+		// 'agency_email' field is missing
 	}
 
 	private List<FeedInfo> getFeedInfo() {
-		FeedInfo feedInfo = new FeedInfo();
-		feedInfo.setPublisherName("ride2go");
-		feedInfo.setPublisherUrl("http://www.ride2go.com");
-		// 'default_lang' field is missing
-		feedInfo.setLang("de");
-		// NPE if optional dates are not set
-		feedInfo.setStartDate(OBA_FEED_START_DATE);
-		feedInfo.setEndDate(OBA_FEED_END_DATE);
-		feedInfo.setVersion("1");
-		return Arrays.asList(feedInfo);
+		List<FeedInfo> feedInfos = new ArrayList<>();
+		for (Feedinfo feedinfo : gtfsFeedInfoProperties.getList()) {
+			FeedInfo feedInfo = new FeedInfo();
+			feedInfo.setPublisherName(feedinfo.getPublishername());
+			feedInfo.setPublisherUrl(feedinfo.getPublisherurl());
+			feedInfo.setLang(feedinfo.getLang());
+			// 'default_lang' field is missing
+			// NPE if optional dates are not set
+			feedInfo.setStartDate(OBA_FEED_START_DATE);
+			feedInfo.setEndDate(OBA_FEED_END_DATE);
+			feedInfo.setVersion(feedinfo.getVersion());
+			// 'feed_contact_email' field is missing
+			// 'feed_contact_url' field is missing
+		}
+		return feedInfos;
 	}
 
 	private void setStops() {
