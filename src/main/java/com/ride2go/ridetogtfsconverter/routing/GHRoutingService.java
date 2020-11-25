@@ -9,8 +9,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.graphhopper.directions.api.client.ApiClient;
 import com.graphhopper.directions.api.client.ApiException;
 import com.graphhopper.directions.api.client.api.RoutingApi;
 import com.graphhopper.directions.api.client.model.ResponseCoordinates;
@@ -31,6 +33,9 @@ public class GHRoutingService extends RoutingService {
 
 	private static final String MESSAGE = "GH response element ";
 
+	@Value("${custom.routing.service.gh.domain}")
+	private String domain;
+
 	public Response calculateRoute(final Request request) {
 		Response response = new Response();
 		try {
@@ -39,6 +44,10 @@ public class GHRoutingService extends RoutingService {
 			String destination = request.getDestination().getLatitude() + "," + request.getDestination().getLongitude();
 			List<String> points = Arrays.asList(origin, destination);
 			RoutingApi routing = new RoutingApi();
+			if (!domain.isEmpty()) {
+				ApiClient client = new ApiClient().setBasePath(domain);
+				routing = new RoutingApi(client);
+			}
 			RouteResponse ghResponse = routing.routeGet(points, pointsEncoded, key, locale, instructions, vehicle,
 					elevation, calcPoints, pointHint, chDisable, weighting, edgeTraversal, algorithm, heading,
 					headingPenalty, passThrough, roundTripDistance, roundTripSeed, alternativeRouteMaxPaths,
