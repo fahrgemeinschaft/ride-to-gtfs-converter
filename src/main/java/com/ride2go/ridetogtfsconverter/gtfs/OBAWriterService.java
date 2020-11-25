@@ -191,6 +191,7 @@ public class OBAWriterService implements WriterService {
 			feedInfo.setVersion(feedinfo.getVersion());
 			// 'feed_contact_email' field is missing
 			// 'feed_contact_url' field is missing
+			feedInfos.add(feedInfo);
 		}
 		return feedInfos;
 	}
