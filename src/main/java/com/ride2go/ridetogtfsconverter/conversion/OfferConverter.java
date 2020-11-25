@@ -54,8 +54,12 @@ public class OfferConverter {
 				places.add(intermediatePlace);
 			}
 		}
-		Place destinationPlace = getPlace(routings.get(last).getDestination(),
-				routings.get(last - 1).getDestination());
+		Place destinationPlace;
+		if (last != 0) {
+			destinationPlace = getPlace(routings.get(last).getDestination(), routings.get(last - 1).getDestination());
+		} else {
+			destinationPlace = getPlace(routings.get(last).getDestination(), null);
+		}
 		places.add(destinationPlace);
 		return places;
 	}
@@ -91,7 +95,7 @@ public class OfferConverter {
 	private Integer getTimeInSeconds(final EntityRoutingPlace entityRoutingPlace,
 			final EntityRoutingPlace entityRoutingPlaceDouble) {
 		LocalTime stoptime = entityRoutingPlace.getStoptime();
-		if (stoptime == null) {
+		if (entityRoutingPlaceDouble != null && stoptime == null) {
 			stoptime = entityRoutingPlaceDouble.getStoptime();
 		}
 		if (stoptime != null) {
