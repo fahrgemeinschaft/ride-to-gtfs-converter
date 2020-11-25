@@ -60,7 +60,7 @@ public class RunService {
 			LOG.info("Get all trips from User " + userId);
 			processTripsByUser(directory, userId);
 		} else {
-			LOG.info("UserId not specified. Get all trips.");
+			LOG.info("UserId not specified. Get trips from all users.");
 			processAllTrips(directory);
 		}
 	}
