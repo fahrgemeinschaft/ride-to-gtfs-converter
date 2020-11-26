@@ -37,6 +37,7 @@ public class RoutingHandler {
 		boolean remove, intermediatePlacesExist;
 		int placesSize = 0;
 		int[] durations = null;
+		int time;
 		for (int i = 0; i < offers.size(); i++) {
 			Offer offer = offers.get(i);
 			remove = false;
@@ -64,7 +65,9 @@ public class RoutingHandler {
 					if (intermediatePlacesExist) {
 						durations[durations.length - 1] = routingResponse.getDuration().intValue();
 					} else if (to.getTimeInSeconds() == null) {
-						to.setTimeInSeconds(from.getTimeInSeconds() + routingResponse.getDuration().intValue());
+						time = from.getTimeInSeconds() + routingResponse.getDuration().intValue();
+						to.setTimeInSeconds(
+								roundSecondsToClosestFullMinute(time));
 					}
 				} else if (to.getTimeInSeconds() == null) {
 					remove = true;
@@ -118,7 +121,12 @@ public class RoutingHandler {
 				int z = x * duration1 / y;
 				time = place1.getTimeInSeconds() + z;
 			}
-			place2.setTimeInSeconds(time);
+			place2.setTimeInSeconds(
+					roundSecondsToClosestFullMinute(time));
 		}
+	}
+
+	private int roundSecondsToClosestFullMinute(int time) {
+		return (time + 30) / 60 * 60;
 	}
 }
