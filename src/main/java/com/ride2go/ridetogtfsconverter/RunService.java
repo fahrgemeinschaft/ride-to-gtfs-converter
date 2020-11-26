@@ -103,8 +103,9 @@ public class RunService {
 	}
 
 	private void processTripsByUser(final File directory, String userId) {
-		List<Offer> offersToComplete = readerService.getOffersByUserId(userId);
-		writerService.writeOfferDataAsGTFS(offersToComplete, directory);
+		List<Offer> offers = readerService.getOffersByUserId(userId);
+		offers = routingHandler.getRoutingInformation(offers);
+		writerService.writeOfferDataAsGTFS(offers, directory);
 	}
 
 	private void processAllTrips(final File directory)
