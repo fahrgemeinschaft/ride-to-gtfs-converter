@@ -29,7 +29,7 @@ public class TripValidator {
 			trip = trips.get(i);
 			routings = trip.getRoutings();
 			if (trip.getTripId() == null || trip.getTripId().trim().isEmpty() || !hasRouting(routings)) {
-				LOG.info("Remove invalid Trip without tripId or routings: " + jsonConverter.toJSONString(trip));
+				LOG.debug("Remove invalid Trip without tripId or routings: " + jsonConverter.toJSONString(trip));
 				trips.remove(i);
 				i--;
 				continue;
@@ -39,7 +39,7 @@ public class TripValidator {
 				origin = routing.getOrigin();
 				destination = routing.getDestination();
 				if (!isPlace(origin) || !isPlace(destination)) {
-					LOG.info("Remove invalid Trip with incomplete origin or destination in at least one routing: "
+					LOG.debug("Remove invalid Trip with incomplete origin or destination in at least one routing: "
 							+ jsonConverter.toJSONString(trip));
 					remove = true;
 					break;
@@ -49,7 +49,7 @@ public class TripValidator {
 				for (int j = 0; j < routings.size(); j++) {
 					if (routings.get(j).getOrigin().getLat().doubleValue() == routings.get(j).getDestination().getLat().doubleValue()
 							&& routings.get(j).getOrigin().getLon().doubleValue() == routings.get(j).getDestination().getLon().doubleValue()) {
-						LOG.info("Remove invalid Trip with origin and destination are equal in at least one routing: "
+						LOG.debug("Remove invalid Trip with origin and destination are equal in at least one routing: "
 								+ jsonConverter.toJSONString(trip));
 						remove = true;
 						break;
@@ -60,7 +60,7 @@ public class TripValidator {
 				for (int j = 1; j < routings.size() - 1; j++) {
 					if (routings.get(j).getOrigin().getLat().doubleValue() != routings.get(j - 1).getDestination().getLat().doubleValue()
 							|| routings.get(j).getOrigin().getLon().doubleValue() != routings.get(j - 1).getDestination().getLon().doubleValue()) {
-						LOG.info("Remove invalid Trip with destination of one routing is not the same as origin of the next routing: "
+						LOG.debug("Remove invalid Trip with destination of one routing is not the same as origin of the next routing: "
 										+ jsonConverter.toJSONString(trip));
 						remove = true;
 						break;
@@ -75,7 +75,7 @@ public class TripValidator {
 			if (routings.size() > 1) {
 				if (routings.get(0).getOrigin().getLat().doubleValue() != routings.get(routings.size() - 1).getOrigin().getLat().doubleValue()
 						|| routings.get(0).getOrigin().getLon().doubleValue() != routings.get(routings.size() - 1).getOrigin().getLon().doubleValue()) {
-					LOG.info("Remove invalid Trip with origin of the first routing is not the same as origin of the last routing: "
+					LOG.debug("Remove invalid Trip with origin of the first routing is not the same as origin of the last routing: "
 									+ jsonConverter.toJSONString(trip));
 					trips.remove(i);
 					i--;
@@ -83,21 +83,21 @@ public class TripValidator {
 				}
 				if (routings.get(routings.size() - 2).getDestination().getLat().doubleValue() != routings.get(routings.size() - 1).getDestination().getLat().doubleValue()
 						|| routings.get(routings.size() - 2).getDestination().getLon().doubleValue() != routings.get(routings.size() - 1).getDestination().getLon().doubleValue()) {
-					LOG.info("Remove invalid Trip with destination of the second last routing is not the same as destination of the last routing: "
+					LOG.debug("Remove invalid Trip with destination of the second last routing is not the same as destination of the last routing: "
 									+ jsonConverter.toJSONString(trip));
 					trips.remove(i);
 					i--;
 					continue;
 				}
 				if (routings.size() == 2) {
-					LOG.info("Remove invalid Trip with two routings: " + jsonConverter.toJSONString(trip));
+					LOG.debug("Remove invalid Trip with two routings: " + jsonConverter.toJSONString(trip));
 					trips.remove(i);
 					i--;
 					continue;
 				}
 			}
 			if (trip.getStarttime() == null) {
-				LOG.info("Remove invalid Trip without starttime: " + trip.getTripId());
+				LOG.debug("Remove invalid Trip without starttime: " + trip.getTripId());
 				trips.remove(i);
 				i--;
 			}

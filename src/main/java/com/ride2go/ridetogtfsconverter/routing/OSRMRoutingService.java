@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
-import com.ride2go.ridetogtfsconverter.exception.WebClientException;
 import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
@@ -75,7 +74,7 @@ public class OSRMRoutingService extends RoutingService {
 				throw new RoutingException("response route is null");
 			}
 			convert(route, response);
-		} catch (WebClientException | RoutingException e) {
+		} catch (RoutingException e) {
 			LOG.error("OSRM routing error: " + e.getMessage());
 		}
 		return response;

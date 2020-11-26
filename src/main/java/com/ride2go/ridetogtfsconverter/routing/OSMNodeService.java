@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.exception.OSMException;
-import com.ride2go.ridetogtfsconverter.exception.WebClientException;
 import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osm.Node;
 import com.ride2go.ridetogtfsconverter.model.item.routing.osm.Osm;
@@ -56,7 +55,7 @@ public class OSMNodeService extends WebClientService {
 			double latitude = parseCoordinate(latitudeString);
 			double longitude = parseCoordinate(longitudeString);
 			geoCoordinates = new GeoCoordinates(latitude, longitude);
-		} catch (WebClientException | OSMException e) {
+		} catch (OSMException e) {
 			LOG.error("OSM error for node {}: {}", osmId, e.getMessage());
 		}
 		return geoCoordinates;

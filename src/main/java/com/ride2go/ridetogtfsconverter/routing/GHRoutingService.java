@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import com.graphhopper.directions.api.client.model.ResponseCoordinates;
 import com.graphhopper.directions.api.client.model.ResponseInstruction;
 import com.graphhopper.directions.api.client.model.RouteResponse;
 import com.graphhopper.directions.api.client.model.RouteResponsePath;
+import com.ride2go.ridetogtfsconverter.conversion.JSONConverter;
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
 import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
@@ -36,13 +38,17 @@ public class GHRoutingService extends RoutingService {
 	@Value("${custom.routing.service.gh.domain}")
 	private String domain;
 
+	@Autowired
+	JSONConverter jsonConverter;
+
 	public Response calculateRoute(final Request request) {
 		Response response = new Response();
+		List<String> points = new ArrayList<>();
 		try {
 			check(request);
 			String origin = request.getOrigin().getLatitude() + "," + request.getOrigin().getLongitude();
 			String destination = request.getDestination().getLatitude() + "," + request.getDestination().getLongitude();
-			List<String> points = Arrays.asList(origin, destination);
+			points = Arrays.asList(origin, destination);
 			RoutingApi routing = new RoutingApi();
 			if (!domain.isEmpty()) {
 				ApiClient client = new ApiClient().setBasePath(domain);
@@ -70,7 +76,7 @@ public class GHRoutingService extends RoutingService {
 		} catch (RoutingException e) {
 			LOG.error("GH routing error: " + e.getMessage());
 		} catch (ApiException e) {
-			LOG.error("GH ApiException: " + e.getMessage());
+			LOG.error("GH ApiException for {}: {}", jsonConverter.toJSONString(points), e.getMessage());
 		}
 		return response;
 	}

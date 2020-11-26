@@ -98,7 +98,7 @@ public class DBReaderService implements ReaderService {
 		try {
 			offers = tripRepository.findByUserIdAndTriptypeAndRelevance(userId, TRIPTYPE_OFFER, RELEVANCE_SEARCHABLE);
 		} catch (JpaObjectRetrievalFailureException e) {
-			LOG.info("JPA object retrieval failure when getting user trips: " + e.getMessage());
+			LOG.error("JPA object retrieval failure when getting user trips: " + e.getMessage());
 		}
 		return (offers == null) ? new ArrayList<>() : offers;
 	}

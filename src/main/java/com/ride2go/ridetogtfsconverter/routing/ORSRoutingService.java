@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
-import com.ride2go.ridetogtfsconverter.exception.WebClientException;
 import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
@@ -61,7 +60,7 @@ public class ORSRoutingService extends RoutingService {
 				throw new RoutingException("response feature is null");
 			}
 			convert(feature, response);
-		} catch (WebClientException | RoutingException e) {
+		} catch (RoutingException e) {
 			LOG.error("ORS routing error: " + e.getMessage());
 		}
 		return response;

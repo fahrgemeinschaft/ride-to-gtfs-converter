@@ -48,7 +48,7 @@ public class Constraints {
 			} else if (trip.getReoccurs() != null && trip.getReoccurs().doesReoccur()) {
 				// ongoing
 			} else {
-				LOG.info("Remove expired Trip with id: " + trip.getTripId());
+				LOG.debug("Remove expired Trip with id: " + trip.getTripId());
 				trips.remove(i);
 				i--;
 			}
@@ -62,7 +62,7 @@ public class Constraints {
 						&& !Collections.disjoint(FEED_TIME_PERIOD_WEEK_DAYS, trip.getReoccurs().getReoccurDays())) {
 					// within period
 				} else {
-					LOG.info("Remove Trip after feed time period with id: " + trip.getTripId());
+					LOG.debug("Remove Trip after feed time period with id: " + trip.getTripId());
 					trips.remove(i);
 					i--;
 				}
@@ -80,7 +80,7 @@ public class Constraints {
 					missingreoccursItem = missingreoccurs.get(i).toLocalDate();
 					if (missingreoccursItem.isBefore(FEED_START_DATE)
 							|| (useTimePeriod && missingreoccursItem.isAfter(FEED_END_DATE))) {
-						LOG.info("Remove missingreoccurs day: " + missingreoccursItem);
+						LOG.debug("Remove missingreoccurs day: " + missingreoccursItem);
 						missingreoccurs.remove(i);
 						i--;
 					}

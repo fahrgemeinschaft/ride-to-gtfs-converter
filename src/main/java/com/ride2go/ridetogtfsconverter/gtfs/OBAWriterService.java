@@ -130,7 +130,7 @@ public class OBAWriterService implements WriterService {
 				listToSave.addAll(savedCollection);
 			}
 		} catch (MissingRequiredEntityException e) {
-			LOG.info("File {} has no entries yet", f);
+			// file has no entries yet
 		} catch (IOException e) {
 			LOG.error("Problem getting entries out of file {}: {}", f, e.getMessage());
 			e.printStackTrace();
@@ -161,7 +161,7 @@ public class OBAWriterService implements WriterService {
 		try {
 			writer.close();
 		} catch (IOException e) {
-			LOG.error("Could not write {} file: {}" + f, e.getMessage());
+			LOG.error("Could not write {} file: {}", f, e.getMessage());
 		}
 	}
 
@@ -318,7 +318,8 @@ public class OBAWriterService implements WriterService {
 		for (int i = 0; i < offers.size(); i++) {
 			stopSequenzIndex = 0;
 			for (Place place : offers.get(i).getPlaces()) {
-				StopTime stopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++, place.getTimeInSeconds());
+				StopTime stopTime = getStopTime(i, ++stopSequenzIndex, stopIndex++,
+						place.getTimeInSeconds());
 				stopTimes.add(stopTime);
 			}
 		}
