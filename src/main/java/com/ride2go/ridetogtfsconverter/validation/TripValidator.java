@@ -1,5 +1,6 @@
 package com.ride2go.ridetogtfsconverter.validation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -11,6 +12,8 @@ import com.ride2go.ridetogtfsconverter.conversion.JSONConverter;
 import com.ride2go.ridetogtfsconverter.model.data.ride.EntityRouting;
 import com.ride2go.ridetogtfsconverter.model.data.ride.EntityRoutingPlace;
 import com.ride2go.ridetogtfsconverter.model.data.ride.EntityTrip;
+import com.ride2go.ridetogtfsconverter.model.item.Offer;
+import com.ride2go.ridetogtfsconverter.model.item.Place;
 
 @Service
 public class TripValidator {
@@ -99,6 +102,32 @@ public class TripValidator {
 			if (trip.getStarttime() == null) {
 				LOG.debug("Remove invalid Trip without starttime: " + trip.getTripId());
 				trips.remove(i);
+				i--;
+			}
+		}
+	}
+
+	public void withDurationGreaterThanZero(List<Offer> offers) {
+		boolean withZeroDuration;
+		List<String> timeInSecondsList;
+		String timeInSeconds;
+		for (int i = 0; i < offers.size(); i++) {
+			withZeroDuration = false;
+			timeInSecondsList = new ArrayList<>();
+			for (Place place : offers.get(i).getPlaces()) {
+				if (place.getTimeInSeconds() != null) {
+					timeInSeconds = place.getTimeInSeconds().toString();
+					if (!timeInSecondsList.contains(timeInSeconds)) {
+						timeInSecondsList.add(timeInSeconds);
+					} else {
+						withZeroDuration = true;
+						break;
+					}
+				}
+			}
+			if (withZeroDuration) {
+				LOG.debug("Remove invalid Trip with zero travel time between stops: " + jsonConverter.toJSONString(offers.get(i)));
+				offers.remove(i);
 				i--;
 			}
 		}

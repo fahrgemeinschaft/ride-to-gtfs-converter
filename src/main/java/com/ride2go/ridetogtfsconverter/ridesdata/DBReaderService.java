@@ -48,7 +48,7 @@ public class DBReaderService implements ReaderService {
 	public List<Offer> getOffersByUserId(String userId) {
 		List<EntityTrip> trips = getValidRelevantAndOngoingUserOffers(userId);
 		List<Offer> offers = convert(trips);
-		constraints.withinArea(offers);
+		checkOffers(offers);
 		return offers;
 	}
 
@@ -65,7 +65,7 @@ public class DBReaderService implements ReaderService {
 	private List<Offer> getOfferPage(final Pageable page) {
 		List<EntityTrip> trips = getValidRelevantAndOngoingOffers(page);
 		List<Offer> offers = convert(trips);
-		constraints.withinArea(offers);
+		checkOffers(offers);
 		return offers;
 	}
 
@@ -73,7 +73,7 @@ public class DBReaderService implements ReaderService {
 		List<EntityTrip> trips = getOfferList(userId);
 		size = trips.size();
 		LOG.info("Found {} trips in the database for user: {}", size, userId);
-		check(trips);
+		checkTrips(trips);
 		return trips;
 	}
 
@@ -81,7 +81,7 @@ public class DBReaderService implements ReaderService {
 		List<EntityTrip> trips = getOfferList(page);
 		size = trips.size();
 		LOG.info("Found {} trips in the database for page {}", size, page.getPageNumber());
-		check(trips);
+		checkTrips(trips);
 		return trips;
 	}
 
@@ -91,6 +91,11 @@ public class DBReaderService implements ReaderService {
 			LOG.info("Using {} valid, relevant and ongoing offers having all required fields", trips.size());
 		}
 		return offers;
+	}
+
+	private void checkOffers(List<Offer> offers) {
+		tripValidator.withDurationGreaterThanZero(offers);
+		constraints.withinArea(offers);
 	}
 
 	private List<EntityTrip> getOfferList(String userId) {
@@ -113,7 +118,7 @@ public class DBReaderService implements ReaderService {
 		return (offers == null) ? new ArrayList<>() : offers;
 	}
 
-	private void check(List<EntityTrip> trips) {
+	private void checkTrips(List<EntityTrip> trips) {
 		tripValidator.validTrips(trips);
 		constraints.ongoingTrips(trips);
 		constraints.ongoingMissingreoccurs(trips);
