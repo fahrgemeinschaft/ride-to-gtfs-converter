@@ -36,7 +36,7 @@ public class GHRoutingService extends RoutingService {
 	private static final String MESSAGE = "GH response element ";
 
 	@Value("${custom.routing.service.gh.domain}")
-	private String domain;
+	private String customDomain;
 
 	@Autowired
 	JSONConverter jsonConverter;
@@ -50,8 +50,8 @@ public class GHRoutingService extends RoutingService {
 			String destination = request.getDestination().getLatitude() + "," + request.getDestination().getLongitude();
 			points = Arrays.asList(origin, destination);
 			RoutingApi routing = new RoutingApi();
-			if (!domain.isEmpty()) {
-				ApiClient client = new ApiClient().setBasePath(domain);
+			if (!customDomain.isEmpty()) {
+				ApiClient client = new ApiClient().setBasePath(customDomain);
 				routing = new RoutingApi(client);
 			}
 			RouteResponse ghResponse = routing.routeGet(points, pointsEncoded, key, locale, instructions, vehicle,

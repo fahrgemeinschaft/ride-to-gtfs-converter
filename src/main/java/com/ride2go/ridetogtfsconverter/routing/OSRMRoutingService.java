@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
@@ -38,6 +39,9 @@ public class OSRMRoutingService extends RoutingService {
 	private static final OSRMResponse FALLBACK_RESPONSE = new OSRMResponse();
 
 	private static final String MESSAGE = "OSRM response body element ";
+
+	@Value("${custom.routing.service.osrm.domain}")
+	private String customDomain;
 
 	@Autowired
 	private OSMNodeService osmNodeService;
@@ -80,9 +84,13 @@ public class OSRMRoutingService extends RoutingService {
 		return response;
 	}
 
-	private static String getUri(final Request request) {
+	private String getUri(final Request request) {
+		String uriPart = DEFAULT_DOMAIN + URI_PATH;
+		if (!customDomain.isEmpty()) {
+			uriPart = customDomain + URI_PATH;
+		}
 		return new StringBuilder()
-				.append(BASE_URI)
+				.append(uriPart)
 				.append(request.getOrigin().getLongitude())
 				.append(",")
 				.append(request.getOrigin().getLatitude())

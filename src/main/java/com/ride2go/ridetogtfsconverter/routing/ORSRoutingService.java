@@ -9,6 +9,7 @@ import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
@@ -34,6 +35,9 @@ public class ORSRoutingService extends RoutingService {
 	private static final GeoJSONRouteResponse FALLBACK_RESPONSE = new GeoJSONRouteResponse();
 
 	private static final String MESSAGE = "ORS response body element ";
+
+	@Value("${custom.routing.service.ors.domain}")
+	private String customDomain;
 
 	public Response calculateRoute(final Request request) {
 		Response response = new Response();
@@ -66,9 +70,13 @@ public class ORSRoutingService extends RoutingService {
 		return response;
 	}
 
-	private static String getUri(final Request request) {
+	private String getUri(final Request request) {
+		String uriPart = DEFAULT_DOMAIN + URI_PATH;
+		if (!customDomain.isEmpty()) {
+			uriPart = customDomain + URI_PATH;
+		}
 		return new StringBuilder()
-				.append(BASE_URI)
+				.append(uriPart)
 				.append("?api_key=")
 				.append(API_KEY)
 				.append("&start=")
