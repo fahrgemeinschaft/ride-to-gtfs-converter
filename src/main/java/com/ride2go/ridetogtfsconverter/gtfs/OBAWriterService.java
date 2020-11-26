@@ -1,12 +1,6 @@
 package com.ride2go.ridetogtfsconverter.gtfs;
 
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.APPROXIMATE_TIMEPOINT;
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.EXACT_TIMEPOINT;
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.MISCELLANEOUS_SERVICE;
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_END_DATE;
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.OBA_FEED_START_DATE;
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.ONE_DIRECTION;
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.SERVICE_NOT_AVAILABLE;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -238,7 +232,7 @@ public class OBAWriterService implements WriterService {
 
 			if (offer.getRecurring() != null) {
 				ServiceDate startDate;
-				if (offer.getStartDate() != null) {
+				if (offer.getStartDate() != null && offer.getStartDate().isAfter(FEED_START_DATE)) {
 					LocalDate startdate = offer.getStartDate();
 					startDate = OBAWriterParameter.getByDate(startdate);
 				} else {
