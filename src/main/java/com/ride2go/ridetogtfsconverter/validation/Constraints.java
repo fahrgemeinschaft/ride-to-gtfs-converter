@@ -27,7 +27,7 @@ public class Constraints {
 
 	private static final List<DayOfWeek> FEED_TIME_PERIOD_WEEK_DAYS = getFeedTimePeriodWeekDays();
 
-	public static final String AREA_BADEN_WUERTTEMBERG = "Baden-Württemberg";
+	public static final String AREA_BADEN_WUERTTEMBERG = "Baden-Wuerttemberg";
 
 	private static final GeoCoordinates COORD_BADEN_WUERTTEMBERG_LEFT_BOTTOM = new GeoCoordinates(47.4, 7.4);
 
