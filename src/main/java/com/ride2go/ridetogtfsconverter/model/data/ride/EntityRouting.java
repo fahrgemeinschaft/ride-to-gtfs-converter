@@ -13,6 +13,8 @@ import javax.persistence.Table;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 
 @Data
@@ -26,6 +28,7 @@ public class EntityRouting {
 
 	@Column(name = "IDtrip")
 	@OrderColumn(name = "ix_trips_routing_IDtrip")
+	@JsonIgnore
 	private String tripId;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
