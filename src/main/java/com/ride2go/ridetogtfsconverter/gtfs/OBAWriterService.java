@@ -239,6 +239,9 @@ public class OBAWriterService implements WriterService {
 					startDate = OBA_FEED_START_DATE;
 				}
 				ServiceDate endDate = OBA_FEED_END_DATE;
+				if (startDate.compareTo(endDate) > 0) {
+					endDate = startDate;
+				}
 				calendar.setStartDate(startDate);
 				calendar.setEndDate(endDate);
 
