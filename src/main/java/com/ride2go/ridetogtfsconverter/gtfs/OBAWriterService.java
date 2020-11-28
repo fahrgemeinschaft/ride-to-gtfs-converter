@@ -231,17 +231,13 @@ public class OBAWriterService implements WriterService {
 			calendar.setServiceId(getAgencyAndId("service_" + offer.getId()));
 
 			if (offer.getRecurring() != null) {
-				ServiceDate startDate;
+				LocalDate startdate = FEED_START_DATE;
 				if (offer.getStartDate() != null && offer.getStartDate().isAfter(FEED_START_DATE)) {
-					LocalDate startdate = offer.getStartDate();
-					startDate = OBAWriterParameter.getByDate(startdate);
-				} else {
-					startDate = OBA_FEED_START_DATE;
+					startdate = offer.getStartDate();
 				}
-				ServiceDate endDate = OBA_FEED_END_DATE;
-				if (startDate.compareTo(endDate) > 0) {
-					endDate = startDate;
-				}
+				ServiceDate startDate = OBAWriterParameter.getByDate(startdate);
+				LocalDate enddate = startdate.plusMonths(1);
+				ServiceDate endDate = OBAWriterParameter.getByDate(enddate);
 				calendar.setStartDate(startDate);
 				calendar.setEndDate(endDate);
 
