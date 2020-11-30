@@ -249,20 +249,6 @@ public class OBAWriterService implements WriterService {
 				calendar.setFriday(recurring.isFriday() ? 1 : 0);
 				calendar.setSaturday(recurring.isSaturday() ? 1 : 0);
 				calendar.setSunday(recurring.isSunday() ? 1 : 0);
-			} else {
-				LocalDate startdate = offer.getStartDate();
-				ServiceDate startDate = OBAWriterParameter.getByDate(startdate);
-				ServiceDate endDate = OBAWriterParameter.getByDate(startdate);
-				calendar.setStartDate(startDate);
-				calendar.setEndDate(endDate);
-
-				calendar.setMonday(1);
-				calendar.setTuesday(1);
-				calendar.setWednesday(1);
-				calendar.setThursday(1);
-				calendar.setFriday(1);
-				calendar.setSaturday(1);
-				calendar.setSunday(1);
 			}
 			calendars.add(calendar);
 		}
@@ -272,14 +258,22 @@ public class OBAWriterService implements WriterService {
 	private List<ServiceCalendarDate> getCalendarDates() {
 		List<ServiceCalendarDate> calendarDates = new ArrayList<>();
 		for (Offer offer : offers) {
-			if (offer.getMissingreoccurs() != null) {
-				for (ZonedDateTime missingreoccursItem : offer.getMissingreoccurs()) {
-					ServiceCalendarDate  calendarDate = new ServiceCalendarDate();
-					calendarDate.setServiceId(getAgencyAndId("service_" + offer.getId()));
-					calendarDate.setDate(OBAWriterParameter.getByDateTime(missingreoccursItem));
-					calendarDate.setExceptionType(SERVICE_NOT_AVAILABLE);
-					calendarDates.add(calendarDate);
+			if (offer.getRecurring() != null) {
+				if (offer.getMissingreoccurs() != null) {
+					for (ZonedDateTime missingreoccursItem : offer.getMissingreoccurs()) {
+						ServiceCalendarDate calendarDate = new ServiceCalendarDate();
+						calendarDate.setServiceId(getAgencyAndId("service_" + offer.getId()));
+						calendarDate.setDate(OBAWriterParameter.getByDateTime(missingreoccursItem));
+						calendarDate.setExceptionType(SERVICE_NOT_AVAILABLE);
+						calendarDates.add(calendarDate);
+					}
 				}
+			} else {
+				ServiceCalendarDate calendarDate = new ServiceCalendarDate();
+				calendarDate.setServiceId(getAgencyAndId("service_" + offer.getId()));
+				calendarDate.setDate(OBAWriterParameter.getByDate(offer.getStartDate()));
+				calendarDate.setExceptionType(SERVICE_AVAILABLE);
+				calendarDates.add(calendarDate);
 			}
 		}
 		return calendarDates;
