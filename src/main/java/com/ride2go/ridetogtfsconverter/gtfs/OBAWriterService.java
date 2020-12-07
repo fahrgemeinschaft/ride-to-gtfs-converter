@@ -227,10 +227,10 @@ public class OBAWriterService implements WriterService {
 		List<ServiceCalendar> calendars = new ArrayList<>();
 		Recurring recurring;
 		for (Offer offer : offers) {
-			ServiceCalendar calendar = new ServiceCalendar();
-			calendar.setServiceId(getAgencyAndId("service_" + offer.getId()));
-
 			if (offer.getRecurring() != null) {
+				ServiceCalendar calendar = new ServiceCalendar();
+				calendar.setServiceId(getAgencyAndId("service_" + offer.getId()));
+
 				LocalDate startdate = FEED_START_DATE;
 				if (offer.getStartDate() != null && offer.getStartDate().isAfter(FEED_START_DATE)) {
 					startdate = offer.getStartDate();
@@ -249,12 +249,12 @@ public class OBAWriterService implements WriterService {
 				calendar.setFriday(recurring.isFriday() ? 1 : 0);
 				calendar.setSaturday(recurring.isSaturday() ? 1 : 0);
 				calendar.setSunday(recurring.isSunday() ? 1 : 0);
+				calendars.add(calendar);
 			}
-			calendars.add(calendar);
 		}
 		return calendars;
 	}
-	
+
 	private List<ServiceCalendarDate> getCalendarDates() {
 		List<ServiceCalendarDate> calendarDates = new ArrayList<>();
 		for (Offer offer : offers) {
