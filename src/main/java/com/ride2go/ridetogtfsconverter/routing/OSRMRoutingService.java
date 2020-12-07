@@ -10,11 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
-import com.ride2go.ridetogtfsconverter.exception.WebClientException;
 import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
@@ -35,10 +34,17 @@ public class OSRMRoutingService extends RoutingService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OSRMRoutingService.class);
 
-	@Autowired
-	OSMNodeService osmNodeService;
+	private static final Class<OSRMResponse> RESPONSE_CLASS = OSRMResponse.class;
+
+	private static final OSRMResponse FALLBACK_RESPONSE = new OSRMResponse();
 
 	private static final String MESSAGE = "OSRM response body element ";
+
+	@Value("${custom.routing.service.osrm.domain}")
+	private String customDomain;
+
+	@Autowired
+	private OSMNodeService osmNodeService;
 
 	private enum Option {
 		ONE, TWO, THREE
@@ -51,12 +57,9 @@ public class OSRMRoutingService extends RoutingService {
 		try {
 			check(request);
 			String uri = getUri(request);
-			ClientResponse clientResponse = getRequest(uri);
-			OSRMResponse osrmResponse = null;
-			try {
-				osrmResponse = clientResponse.bodyToMono(OSRMResponse.class).block();
-			} catch (Exception e) {
-				LOG.error("OSRM routing deserialization error: ", e);
+			OSRMResponse osrmResponse = getRequest(uri, RESPONSE_CLASS, FALLBACK_RESPONSE).block();
+			if (FALLBACK_RESPONSE.equals(osrmResponse)) {
+				return response;
 			}
 			if (osrmResponse == null) {
 				throw new RoutingException("response body is null");
@@ -75,17 +78,19 @@ public class OSRMRoutingService extends RoutingService {
 				throw new RoutingException("response route is null");
 			}
 			convert(route, response);
-		} catch (WebClientException | RoutingException e) {
+		} catch (RoutingException e) {
 			LOG.error("OSRM routing error: " + e.getMessage());
-		} catch (Exception e) {
-			LOG.error("WebClient problem: {}: {}: {}", e.getClass(), e.getCause(), e.getMessage());
 		}
 		return response;
 	}
 
-	private static String getUri(final Request request) {
+	private String getUri(final Request request) {
+		String uriPart = DEFAULT_DOMAIN + URI_PATH;
+		if (!customDomain.isEmpty()) {
+			uriPart = customDomain + URI_PATH;
+		}
 		return new StringBuilder()
-				.append(BASE_URI)
+				.append(uriPart)
 				.append(request.getOrigin().getLongitude())
 				.append(",")
 				.append(request.getOrigin().getLatitude())
@@ -249,7 +254,6 @@ public class OSRMRoutingService extends RoutingService {
 			LOG.warn(message + "geometry.coordinates are null");
 			return points;
 		}
-		Location point;
 		for (List<Double> coordinate : coordinates) {
 			if (coordinate == null) {
 				LOG.warn(message + "geometry.coordinate is null");
@@ -263,7 +267,7 @@ public class OSRMRoutingService extends RoutingService {
 				LOG.warn(message + "geometry.coordinate latitude is null");
 				continue;
 			}
-			point = new Location(coordinate.get(1), coordinate.get(0));
+			Location point = new Location(coordinate.get(1), coordinate.get(0));
 			points.add(point);
 		}
 		return points;
@@ -319,13 +323,12 @@ public class OSRMRoutingService extends RoutingService {
 			final List<Float> durations) {
 		List<Location> points = new ArrayList<>();
 		Measures measures = new Measures();
-		Location point;
 		for (int i = 0; i < nodes.size(); i++) {
 			nullCheck(nodes.get(i), MESSAGE + "route.leg.annotation.node is null");
 			measures.setDistance(distances.get(i));
 			measures.setDuration(durations.get(i));
 
-			point = new Location(null);
+			Location point = new Location(null);
 			point.setOsmNodeId(nodes.get(i));
 			point.setDistance(
 					getDistance(measures, MESSAGE + "route.leg.annotation."));
@@ -354,11 +357,10 @@ public class OSRMRoutingService extends RoutingService {
 		} else {
 			LOG.warn("Convert OSM node ids to latitude and longitude");
 			Long osmNodeId;
-			GeoCoordinates geoCoordinates;
 			for (Location point : routeShapingPoints3) {
 				osmNodeId = point.getOsmNodeId();
 				if (osmNodeId != null) {
-					geoCoordinates = osmNodeService.convertIdToLatLon(osmNodeId);
+					GeoCoordinates geoCoordinates = osmNodeService.convertIdToLatLon(osmNodeId);
 					if (geoCoordinates != null) {
 						point.setGeoCoordinates(geoCoordinates);
 					}

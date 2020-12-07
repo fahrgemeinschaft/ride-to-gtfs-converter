@@ -9,11 +9,10 @@ import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 
 import com.ride2go.ridetogtfsconverter.exception.RoutingException;
-import com.ride2go.ridetogtfsconverter.exception.WebClientException;
 import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Location;
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request;
@@ -31,16 +30,25 @@ public class ORSRoutingService extends RoutingService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ORSRoutingService.class);
 
+	private static final Class<GeoJSONRouteResponse> RESPONSE_CLASS = GeoJSONRouteResponse.class;
+
+	private static final GeoJSONRouteResponse FALLBACK_RESPONSE = new GeoJSONRouteResponse();
+
 	private static final String MESSAGE = "ORS response body element ";
+
+	@Value("${custom.routing.service.ors.domain}")
+	private String customDomain;
 
 	public Response calculateRoute(final Request request) {
 		Response response = new Response();
 		try {
 			check(request);
 			String uri = getUri(request);
-			ClientResponse clientResponse = getRequest(uri);
-			GeoJSONRouteResponse orsResponse = clientResponse.bodyToMono(GeoJSONRouteResponse.class)
+			GeoJSONRouteResponse orsResponse = getRequest(uri, RESPONSE_CLASS, FALLBACK_RESPONSE)
 					.block();
+			if (FALLBACK_RESPONSE.equals(orsResponse)) {
+				return response;
+			}
 			if (orsResponse == null) {
 				throw new RoutingException("response body is null");
 			}
@@ -56,17 +64,19 @@ public class ORSRoutingService extends RoutingService {
 				throw new RoutingException("response feature is null");
 			}
 			convert(feature, response);
-		} catch (WebClientException | RoutingException e) {
+		} catch (RoutingException e) {
 			LOG.error("ORS routing error: " + e.getMessage());
-		} catch (Exception e) {
-			LOG.error("WebClient problem: {}: {}: {}", e.getClass(), e.getCause(), e.getMessage());
 		}
 		return response;
 	}
 
-	private static String getUri(final Request request) {
+	private String getUri(final Request request) {
+		String uriPart = DEFAULT_DOMAIN + URI_PATH;
+		if (!customDomain.isEmpty()) {
+			uriPart = customDomain + URI_PATH;
+		}
 		return new StringBuilder()
-				.append(BASE_URI)
+				.append(uriPart)
 				.append("?api_key=")
 				.append(API_KEY)
 				.append("&start=")

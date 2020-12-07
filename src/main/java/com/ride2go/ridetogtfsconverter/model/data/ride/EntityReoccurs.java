@@ -1,16 +1,21 @@
 package com.ride2go.ridetogtfsconverter.model.data.ride;
 
 import static java.time.DayOfWeek.*;
+
 import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ride2go.ridetogtfsconverter.conversion.ReoccursDayAttributeConverter;
+
 import lombok.Data;
 
 @Data
@@ -21,6 +26,7 @@ public class EntityReoccurs {
 	@Id
 	@Column(name = "IDtrip")
 	@OrderColumn(name = "ix_trips_reoccurs_IDtrip")
+	@JsonIgnore
 	private String tripId;
 
 	@Column(columnDefinition = "TINYINT(1)")
@@ -51,10 +57,12 @@ public class EntityReoccurs {
 	@Convert(converter = ReoccursDayAttributeConverter.class)
 	private Boolean su;
 
+	@JsonIgnore
 	public boolean doesReoccur() {
 		return (mo || tu || we || th || fr || sa || su) ? true : false;
 	}
 
+	@JsonIgnore
 	public List<DayOfWeek> getReoccurDays() {
 		List<DayOfWeek> reoccurDays = new ArrayList<>();
 		if (mo) {

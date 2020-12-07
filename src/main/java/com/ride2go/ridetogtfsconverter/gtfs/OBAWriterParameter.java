@@ -21,6 +21,8 @@ public class OBAWriterParameter {
 
 	protected static final int APPROXIMATE_TIMEPOINT = 0;
 
+	protected static final int SERVICE_AVAILABLE = 1;
+
 	protected static final int SERVICE_NOT_AVAILABLE = 2;
 
 	public static final LocalDate FEED_START_DATE = TODAY;

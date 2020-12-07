@@ -1,32 +1,34 @@
 package com.ride2go.ridetogtfsconverter.routing;
 
-import static org.springframework.http.HttpStatus.OK;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.ride2go.ridetogtfsconverter.exception.WebClientException;
+import reactor.core.publisher.Mono;
 
 @Service
 public class WebClientService {
 
-	@Autowired
-	WebClient webClient;
+	private static final Logger LOG = LoggerFactory.getLogger(WebClientService.class);
 
-	protected ClientResponse getRequest(final String uri) throws Exception {
-		ClientResponse clientResponse = webClient.get()
-				.uri(uri)
-				.exchange()
-				.block();
-		if (clientResponse == null) {
-			throw new WebClientException("client response is null");
-		}
-		if (clientResponse.statusCode() != OK) {
-			throw new WebClientException(
-					"response status code is " + clientResponse.statusCode() + " for GET request " + uri);
-		}
-		return clientResponse;
+	@Autowired
+	private WebClient webClient;
+
+	@Autowired
+	private ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory;
+
+	protected <T> Mono<T> getRequest(String uri, final Class<T> responseClass, final T fallbackResponse) {
+		return circuitBreakerFactory.create(uri)
+				.run(webClient.get()
+						.uri(uri)
+						.retrieve()
+						.bodyToMono(responseClass).retry(3), throwable -> {
+							LOG.error("WebClient problem: {}: {}: {}",
+									throwable.getClass(), throwable.getCause(), throwable.getMessage());
+							return Mono.just(fallbackResponse);
+						});
 	}
 }

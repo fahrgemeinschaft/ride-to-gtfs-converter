@@ -1,5 +1,5 @@
 plugins {
-  id 'org.springframework.boot' version '2.3.5.RELEASE'
+  id 'org.springframework.boot' version '2.4.0'
   id 'io.spring.dependency-management' version '1.0.10.RELEASE'
   id 'java'
   id 'groovy'
@@ -13,11 +13,16 @@ configurations {
   }
 }
 repositories {
+  maven { url 'https://repo.spring.io/milestone' }
   mavenCentral()
+}
+ext {
+  set('springCloudVersion', "2020.0.0-M5")
 }
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
   implementation 'org.springframework.boot:spring-boot-starter-webflux'
+  implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j'
   // routing with GraphHopper
   implementation 'com.graphhopper:directions-api-client:0.10.0'
   // for openrouteservice routing response model
@@ -34,13 +39,16 @@ dependencies {
   compileOnly 'org.projectlombok:lombok'
   runtimeOnly 'mysql:mysql-connector-java'
   annotationProcessor 'org.projectlombok:lombok'
-  testImplementation('org.springframework.boot:spring-boot-starter-test') {
-    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-  }
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
   testImplementation 'io.projectreactor:reactor-test'
-  testImplementation 'org.codehaus.groovy:groovy:3.0.4'
-  testImplementation 'org.codehaus.groovy:groovy-all:3.0.4'
-  testImplementation 'org.spockframework:spock-spring:2.0-M3-groovy-3.0'
+  testImplementation 'org.codehaus.groovy:groovy:3.0.6'
+  testImplementation 'org.codehaus.groovy:groovy-all:3.0.6'
+  testImplementation 'org.spockframework:spock-spring:2.0-M4-groovy-3.0'  
+}
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+  }
 }
 test {
   useJUnitPlatform()

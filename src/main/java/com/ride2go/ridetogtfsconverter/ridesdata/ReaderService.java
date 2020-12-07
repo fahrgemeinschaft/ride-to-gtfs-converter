@@ -9,11 +9,9 @@ import com.ride2go.ridetogtfsconverter.model.item.Offer;
 
 public interface ReaderService {
 
-	public List<Offer> getOffersByUserId(final String userId);
+	public List<Offer> getOffersByUserId(String userId);
 
-	public CompletableFuture<List<Offer>> getOffersByUserIdAsync(final String userId);
-
-	public List<Offer> getOfferPage(final Pageable page);
+	public long getOfferByTriptypeAndRelevanceCount();
 
 	public CompletableFuture<List<Offer>> getOfferPageAsync(final Pageable page);
 }

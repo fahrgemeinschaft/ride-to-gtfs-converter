@@ -5,7 +5,9 @@ public class OSRMRoutingParameter {
 	private OSRMRoutingParameter() {
 	}
 
-	protected static final String BASE_URI = "http://router.project-osrm.org/route/v1/driving/";
+	protected static final String DEFAULT_DOMAIN = "http://router.project-osrm.org";
+
+	protected static final String URI_PATH = "/route/v1/driving/";
 
 	protected static final boolean STEPS_VALUE = true;
 
