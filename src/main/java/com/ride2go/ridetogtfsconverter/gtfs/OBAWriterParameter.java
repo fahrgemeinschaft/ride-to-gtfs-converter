@@ -1,8 +1,5 @@
 package com.ride2go.ridetogtfsconverter.gtfs;
 
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.ONE_MONTH_FROM_TODAY;
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TODAY;
-
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
@@ -25,13 +22,13 @@ public class OBAWriterParameter {
 
 	protected static final int SERVICE_NOT_AVAILABLE = 2;
 
-	public static final LocalDate FEED_START_DATE = TODAY;
+	public static LocalDate feedStartDate;
 
-	public static final LocalDate FEED_END_DATE = ONE_MONTH_FROM_TODAY;
+	public static LocalDate feedEndDate;
 
-	protected static final ServiceDate OBA_FEED_START_DATE = getByDate(FEED_START_DATE);
+	protected static ServiceDate obaFeedStartDate;
 
-	protected static final ServiceDate OBA_FEED_END_DATE = getByDate(FEED_END_DATE);
+	protected static ServiceDate obaFeedEndDate;
 
 	protected static ServiceDate getByDate(LocalDate date) {
 		return new ServiceDate(date.getYear(), date.getMonthValue(), date.getDayOfMonth());

@@ -15,11 +15,11 @@ public class DateAndTimeHandler {
 
 	public static final DateTimeFormatter DATA_TIME_FORMATTER = DateTimeFormatter.ofPattern("Hmm");
 
-	public static final LocalDate TODAY = LocalDate.now(TIME_ZONE_ID_BERLIN);
-
-	public static final LocalDate ONE_MONTH_FROM_TODAY = TODAY.plusMonths(1);
-
-	public static final LocalDate ONE_YEAR_FROM_TODAY = TODAY.plusYears(1);
-
 	public static final int ONE_DAY_IN_SECONDS = 86400;
+
+	public static LocalDate today;
+
+	public static LocalDate oneMonthFromToday;
+
+	public static LocalDate oneYearFromToday;
 }
