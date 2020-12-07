@@ -39,6 +39,7 @@ import com.ride2go.ridetogtfsconverter.configuration.GtfsFeedinfoProperties.Feed
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.model.item.Place;
 import com.ride2go.ridetogtfsconverter.model.item.Recurring;
+import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -68,6 +69,9 @@ public class OBAWriterService implements WriterService {
 	private List<Trip> trips;
 
 	public void writeProviderInfoAsGTFS(final File directory) {
+		OBAWriterParameter.obaFeedStartDate = OBAWriterParameter.getByDate(feedStartDate);
+		OBAWriterParameter.obaFeedEndDate = OBAWriterParameter.getByDate(feedEndDate);
+
 		init(null, directory);
 
 		setAgency();
@@ -180,8 +184,8 @@ public class OBAWriterService implements WriterService {
 			feedInfo.setLang(feedinfo.getLang());
 			// 'default_lang' field is missing
 			// NPE if optional dates are not set
-			feedInfo.setStartDate(OBA_FEED_START_DATE);
-			feedInfo.setEndDate(OBA_FEED_END_DATE);
+			feedInfo.setStartDate(OBAWriterParameter.obaFeedStartDate);
+			feedInfo.setEndDate(OBAWriterParameter.obaFeedEndDate);
 			feedInfo.setVersion(feedinfo.getVersion());
 			// 'feed_contact_email' field is missing
 			// 'feed_contact_url' field is missing
@@ -231,8 +235,8 @@ public class OBAWriterService implements WriterService {
 				ServiceCalendar calendar = new ServiceCalendar();
 				calendar.setServiceId(getAgencyAndId("service_" + offer.getId()));
 
-				LocalDate startdate = FEED_START_DATE;
-				if (offer.getStartDate() != null && offer.getStartDate().isAfter(FEED_START_DATE)) {
+				LocalDate startdate = OBAWriterParameter.feedStartDate;
+				if (offer.getStartDate() != null && offer.getStartDate().isAfter(OBAWriterParameter.feedEndDate)) {
 					startdate = offer.getStartDate();
 				}
 				ServiceDate startDate = OBAWriterParameter.getByDate(startdate);
