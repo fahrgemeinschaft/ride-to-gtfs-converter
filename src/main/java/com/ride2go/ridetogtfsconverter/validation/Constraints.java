@@ -2,6 +2,7 @@ package com.ride2go.ridetogtfsconverter.validation;
 
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_END_DATE;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_START_DATE;
+import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.ONE_YEAR_FROM_TODAY;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -49,6 +50,14 @@ public class Constraints {
 				// ongoing
 			} else {
 				LOG.debug("Remove expired Trip with id: " + trip.getTripId());
+				trips.remove(i);
+				i--;
+			}
+		}
+		for (int i = 0; i < trips.size(); i++) {
+			trip = trips.get(i);
+			if (trip.getStartdate() != null && !trip.getStartdate().isBefore(ONE_YEAR_FROM_TODAY)) {
+				LOG.debug("Remove Trip more than one year in the future with id: " + trip.getTripId());
 				trips.remove(i);
 				i--;
 			}
