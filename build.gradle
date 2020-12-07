@@ -50,6 +50,9 @@ dependencyManagement {
     mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
   }
 }
+bootJar {
+  archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}"
+}
 test {
   useJUnitPlatform()
 }
