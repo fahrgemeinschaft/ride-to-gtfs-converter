@@ -1,9 +1,12 @@
 package com.ride2go.ridetogtfsconverter;
 
 import static com.ride2go.ridetogtfsconverter.configuration.SystemConfiguration.AMOUNT_OF_THREADS;
+import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TIME_ZONE_ID_BERLIN;
+import static com.ride2go.ridetogtfsconverter.validation.Constraints.AREA_BADEN_WUERTTEMBERG;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -21,11 +24,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 
+import com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter;
 import com.ride2go.ridetogtfsconverter.gtfs.WriterService;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.ridesdata.ReaderService;
 import com.ride2go.ridetogtfsconverter.routing.RoutingHandler;
-import static com.ride2go.ridetogtfsconverter.validation.Constraints.AREA_BADEN_WUERTTEMBERG;;
+import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;;
 
 @Service
 public class RunService {
@@ -47,13 +51,25 @@ public class RunService {
 	@Autowired
 	private RoutingHandler routingHandler;
 
+	@Value("${custom.gtfs.output.directory}")
+	private String gtfsOutputDirectory;
+
+	@Value("${custom.trips.by-user}")
+	private String tripsByUser;
+
 	@Value("${custom.gtfs.trips.area}")
 	private String area;
 
-	protected void run(String... args) throws Exception {
-		final File directory = getDirectory(args);
+	protected void run() throws Exception {
+		DateAndTimeHandler.today = LocalDate.now(TIME_ZONE_ID_BERLIN);
+		DateAndTimeHandler.oneMonthFromToday = DateAndTimeHandler.today.plusMonths(1);
+		DateAndTimeHandler.oneYearFromToday = DateAndTimeHandler.today.plusYears(1);
+		OBAWriterParameter.feedStartDate = DateAndTimeHandler.today;
+		OBAWriterParameter.feedEndDate = DateAndTimeHandler.oneMonthFromToday;
+
+		final File directory = getDirectory();
 		LOG.info("Use directory " + directory);
-		final String userId = getUserId(args);
+		final String userId = getUserId();
 		area();
 		writerService.writeProviderInfoAsGTFS(directory);
 		if (userId != null) {
@@ -65,8 +81,8 @@ public class RunService {
 		}
 	}
 
-	private File getDirectory(String... args) throws IOException {
-		final String directoryString = getArgAtIndexOrDefault(0, DEFAULT_GTFS_OUTPUT_DIRECTORY, args);
+	private File getDirectory() throws IOException {
+		final String directoryString = getValueOrDefault(gtfsOutputDirectory, DEFAULT_GTFS_OUTPUT_DIRECTORY);
 		final File directory = new File(directoryString);
 		try {
 			if (directory.exists() && directory.isDirectory()) {
@@ -79,15 +95,8 @@ public class RunService {
 		return directory;
 	}
 
-	private String getUserId(String... args) {
-		return getArgAtIndexOrDefault(1, null, args);
-	}
-
-	private String getArgAtIndexOrDefault(int i, String defaultValue, String... args) {
-		if (args != null && args.length > 0 && args[i] != null) {
-			return args[i].trim();
-		}
-		return defaultValue;
+	private String getUserId() {
+		return getValueOrDefault(tripsByUser, null);
 	}
 
 	private void area() {
@@ -127,9 +136,18 @@ public class RunService {
 					stop = true;
 					break;
 				}
-
 			}
 			index += AMOUNT_OF_THREADS;
 		}
+	}
+
+	private String getValueOrDefault(String value, String defaultValue) {
+		if (value != null) {
+			value = value.trim();
+			if (!value.isEmpty()) {
+				return value;
+			}
+		}
+		return defaultValue;
 	}
 }
