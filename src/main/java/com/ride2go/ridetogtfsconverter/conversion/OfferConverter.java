@@ -6,6 +6,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import com.ride2go.ridetogtfsconverter.model.item.Recurring;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class OfferConverter {
 
+	private static final Logger LOG = LoggerFactory.getLogger(OfferConverter.class);
+
 	private int previousTimeInSeconds;
 
 	public List<Offer> fromTripToOffer(final List<EntityTrip> trips) {
@@ -34,32 +38,27 @@ public class OfferConverter {
 			offer.setPlaces(getPlaces(trip));
 			offer.setRecurring(getRecurring(trip));
 			offer.setMissingreoccurs(trip.getMissingreoccurs());
-			offers.add(offer);
+			if (offerHasNoInvalidStopTime(offer)) {
+				offers.add(offer);
+			} else {
+				LOG.debug("Remove invalid Trip with wrong stoptimes: " + trip.getTripId());
+			}
 		}
 		return offers;
 	}
 
 	private List<Place> getPlaces(final EntityTrip trip) {
-		List<Place> places = new ArrayList<>();
 		List<EntityRouting> routings = trip.getRoutings();
-		int last = routings.size() - 1;
-		Place originPlace = getPlace(routings.get(last).getOrigin(), null);
+		List<Place> places = new ArrayList<>();
+		Place originPlace = getPlace(routings.get(0).getOrigin());
 		originPlace.setTimeInSeconds(trip.getStarttime().toSecondOfDay());
 		previousTimeInSeconds = originPlace.getTimeInSeconds();
 		places.add(originPlace);
-		if (routings.size() > 1) {
-			for (int i = 0; i < routings.size() - 2; i++) {
-				Place intermediatePlace = getPlace(routings.get(i).getDestination(),
-						routings.get(i + 1).getOrigin());
-				places.add(intermediatePlace);
-			}
+		for (int i = 1; i < routings.size(); i++) {
+			Place intermediatePlace = getPlace(routings.get(i).getDestination());
+			places.add(intermediatePlace);
 		}
-		Place destinationPlace;
-		if (last != 0) {
-			destinationPlace = getPlace(routings.get(last).getDestination(), routings.get(last - 1).getDestination());
-		} else {
-			destinationPlace = getPlace(routings.get(last).getDestination(), null);
-		}
+		Place destinationPlace = getPlace(routings.get(0).getDestination());
 		places.add(destinationPlace);
 		return places;
 	}
@@ -80,32 +79,39 @@ public class OfferConverter {
 		return null;
 	}
 
-	private Place getPlace(final EntityRoutingPlace entityRoutingPlace,
-			final EntityRoutingPlace entityRoutingPlaceDouble) {
+	private Place getPlace(final EntityRoutingPlace entityRoutingPlace) {
 		GeoCoordinates geoCoordinates = new GeoCoordinates(entityRoutingPlace.getLat(), entityRoutingPlace.getLon());
 
 		Place place = new Place();
 		place.setId(entityRoutingPlace.getPlaceId());
 		place.setGeoCoordinates(geoCoordinates);
 		place.setAddress(entityRoutingPlace.getAddress());
-		place.setTimeInSeconds(getTimeInSeconds(entityRoutingPlace, entityRoutingPlaceDouble));
+		place.setTimeInSeconds(getTimeInSeconds(entityRoutingPlace));
 		return place;
 	}
 
-	private Integer getTimeInSeconds(final EntityRoutingPlace entityRoutingPlace,
-			final EntityRoutingPlace entityRoutingPlaceDouble) {
+	private Integer getTimeInSeconds(final EntityRoutingPlace entityRoutingPlace) {
 		LocalTime stoptime = entityRoutingPlace.getStoptime();
-		if (entityRoutingPlaceDouble != null && stoptime == null) {
-			stoptime = entityRoutingPlaceDouble.getStoptime();
-		}
 		if (stoptime != null) {
 			int stoptimeInSeconds = stoptime.toSecondOfDay();
 			while (stoptimeInSeconds < previousTimeInSeconds) {
 				stoptimeInSeconds += ONE_DAY_IN_SECONDS;
 			}
+			if (stoptimeInSeconds - previousTimeInSeconds > ONE_DAY_IN_SECONDS / 2) {
+				return -1;
+			}
 			previousTimeInSeconds = stoptimeInSeconds;
 			return stoptimeInSeconds;
 		}
 		return null;
+	}
+
+	private boolean offerHasNoInvalidStopTime(final Offer offer) {
+		for (Place place : offer.getPlaces()) {
+			if (place.getTimeInSeconds() != null && place.getTimeInSeconds().intValue() == -1) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
