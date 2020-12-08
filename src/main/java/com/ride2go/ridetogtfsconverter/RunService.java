@@ -29,7 +29,7 @@ import com.ride2go.ridetogtfsconverter.gtfs.WriterService;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.ridesdata.ReaderService;
 import com.ride2go.ridetogtfsconverter.routing.RoutingHandler;
-import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;;
+import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;
 
 @Service
 public class RunService {
@@ -66,6 +66,7 @@ public class RunService {
 		DateAndTimeHandler.oneYearFromToday = DateAndTimeHandler.today.plusYears(1);
 		OBAWriterParameter.feedStartDate = DateAndTimeHandler.today;
 		OBAWriterParameter.feedEndDate = DateAndTimeHandler.oneMonthFromToday;
+		OBAWriterParameter.feedTimePeriodWeekDays = OBAWriterParameter.getFeedTimePeriodWeekDays();
 
 		final File directory = getDirectory();
 		LOG.info("Use directory " + directory);

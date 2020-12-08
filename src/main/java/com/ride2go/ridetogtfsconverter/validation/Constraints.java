@@ -1,9 +1,7 @@
 package com.ride2go.ridetogtfsconverter.validation;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,8 +21,6 @@ import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;
 public class Constraints {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Constraints.class);
-
-	private static final List<DayOfWeek> FEED_TIME_PERIOD_WEEK_DAYS = getFeedTimePeriodWeekDays();
 
 	public static final String AREA_BADEN_WUERTTEMBERG = "Baden-Wuerttemberg";
 
@@ -66,7 +62,7 @@ public class Constraints {
 				if (trip.getStartdate() != null && !trip.getStartdate().isAfter(OBAWriterParameter.feedEndDate)) {
 					// within period
 				} else if (trip.getReoccurs() != null
-						&& !Collections.disjoint(FEED_TIME_PERIOD_WEEK_DAYS, trip.getReoccurs().getReoccurDays())) {
+						&& !Collections.disjoint(OBAWriterParameter.feedTimePeriodWeekDays, trip.getReoccurs().getReoccurDays())) {
 					// within period
 				} else {
 					LOG.debug("Remove Trip after feed time period with id: " + trip.getTripId());
@@ -119,16 +115,5 @@ public class Constraints {
 				}
 			}
 		}
-	}
-
-	private static List<DayOfWeek> getFeedTimePeriodWeekDays() {
-		List<DayOfWeek> feedTimePeriodWeekDays = new ArrayList<>();
-		DayOfWeek feedStartDay = OBAWriterParameter.feedStartDate.getDayOfWeek();
-		feedTimePeriodWeekDays.add(feedStartDay);
-		int i = 1;
-		while (i < 7 && !OBAWriterParameter.feedStartDate.plusDays(i).isAfter(OBAWriterParameter.feedEndDate)) {
-			feedTimePeriodWeekDays.add(feedStartDay.plus(i++));
-		}
-		return feedTimePeriodWeekDays;
 	}
 }

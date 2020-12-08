@@ -1,7 +1,10 @@
 package com.ride2go.ridetogtfsconverter.gtfs;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 
@@ -26,6 +29,8 @@ public class OBAWriterParameter {
 
 	public static LocalDate feedEndDate;
 
+	public static List<DayOfWeek> feedTimePeriodWeekDays;
+
 	protected static ServiceDate obaFeedStartDate;
 
 	protected static ServiceDate obaFeedEndDate;
@@ -36,5 +41,16 @@ public class OBAWriterParameter {
 
 	protected static ServiceDate getByDateTime(ZonedDateTime dateTime) {
 		return new ServiceDate(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth());
+	}
+
+	public static List<DayOfWeek> getFeedTimePeriodWeekDays() {
+		List<DayOfWeek> feedTimePeriodWeekDays = new ArrayList<>();
+		DayOfWeek feedStartDay = OBAWriterParameter.feedStartDate.getDayOfWeek();
+		feedTimePeriodWeekDays.add(feedStartDay);
+		int i = 1;
+		while (i < 7 && !OBAWriterParameter.feedStartDate.plusDays(i).isAfter(OBAWriterParameter.feedEndDate)) {
+			feedTimePeriodWeekDays.add(feedStartDay.plus(i++));
+		}
+		return feedTimePeriodWeekDays;
 	}
 }
