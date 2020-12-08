@@ -1,10 +1,10 @@
 package com.ride2go.ridetogtfsconverter.gtfs;
 
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.ONE_MONTH_FROM_TODAY;
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TODAY;
-
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 
@@ -25,13 +25,15 @@ public class OBAWriterParameter {
 
 	protected static final int SERVICE_NOT_AVAILABLE = 2;
 
-	public static final LocalDate FEED_START_DATE = TODAY;
+	public static LocalDate feedStartDate;
 
-	public static final LocalDate FEED_END_DATE = ONE_MONTH_FROM_TODAY;
+	public static LocalDate feedEndDate;
 
-	protected static final ServiceDate OBA_FEED_START_DATE = getByDate(FEED_START_DATE);
+	public static List<DayOfWeek> feedTimePeriodWeekDays;
 
-	protected static final ServiceDate OBA_FEED_END_DATE = getByDate(FEED_END_DATE);
+	protected static ServiceDate obaFeedStartDate;
+
+	protected static ServiceDate obaFeedEndDate;
 
 	protected static ServiceDate getByDate(LocalDate date) {
 		return new ServiceDate(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
@@ -39,5 +41,16 @@ public class OBAWriterParameter {
 
 	protected static ServiceDate getByDateTime(ZonedDateTime dateTime) {
 		return new ServiceDate(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth());
+	}
+
+	public static List<DayOfWeek> getFeedTimePeriodWeekDays() {
+		List<DayOfWeek> feedTimePeriodWeekDays = new ArrayList<>();
+		DayOfWeek feedStartDay = OBAWriterParameter.feedStartDate.getDayOfWeek();
+		feedTimePeriodWeekDays.add(feedStartDay);
+		int i = 1;
+		while (i < 7 && !OBAWriterParameter.feedStartDate.plusDays(i).isAfter(OBAWriterParameter.feedEndDate)) {
+			feedTimePeriodWeekDays.add(feedStartDay.plus(i++));
+		}
+		return feedTimePeriodWeekDays;
 	}
 }

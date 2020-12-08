@@ -9,26 +9,21 @@ Define database connection and GTFS option properties in the **application.prope
 * spring.datasource.url
 * spring.datasource.username
 * spring.datasource.password
-* custom.gtfs.trips.use-time-period
-* custom.gtfs.trip.link
+...
 
 or use environment variables:
 
 * DB_URL
 * DB_USERNAME
 * DB_PASSWORD
-* GTFS_TRIPS_USE_TIME_PERIOD
-* GTFS_TRIP_LINK
+...
 
-`./gradlew clean bootRun --args 'gtfs_data/ fc35e4a3-3959-8734-e97e-2d4a7577d886'`
+`./gradlew clean bootRun --args 'runOnce'`
 
-where `gtfs_data/` is the given directory for saving the GTFS files and `fc35e4a3-3959-8734-e97e-2d4a7577d886` 
-is the given userId for getting all relevant user rides
-
-`./gradlew clean bootRun --args 'gtfs_data/'`
-
-with given directory and getting all relevant rides
+to start the application and generate the GTFS once.
 
 `./gradlew clean bootRun`
 
-using relative default directory `data/` and getting all relevant rides
+to start the application and generate the GTFS by the given cron schedule.
+
+Default GTFS output directory is `data/`.

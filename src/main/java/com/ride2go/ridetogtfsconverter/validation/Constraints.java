@@ -1,13 +1,7 @@
 package com.ride2go.ridetogtfsconverter.validation;
 
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_END_DATE;
-import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.FEED_START_DATE;
-import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.ONE_YEAR_FROM_TODAY;
-
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,17 +10,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter;
 import com.ride2go.ridetogtfsconverter.model.data.ride.EntityTrip;
 import com.ride2go.ridetogtfsconverter.model.item.GeoCoordinates;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.model.item.Place;
+import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;
 
 @Service
 public class Constraints {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Constraints.class);
-
-	private static final List<DayOfWeek> FEED_TIME_PERIOD_WEEK_DAYS = getFeedTimePeriodWeekDays();
 
 	public static final String AREA_BADEN_WUERTTEMBERG = "Baden-Wuerttemberg";
 
@@ -44,7 +38,7 @@ public class Constraints {
 		EntityTrip trip;
 		for (int i = 0; i < trips.size(); i++) {
 			trip = trips.get(i);
-			if (trip.getStartdate() != null && !trip.getStartdate().isBefore(FEED_START_DATE)) {
+			if (trip.getStartdate() != null && !trip.getStartdate().isBefore(OBAWriterParameter.feedStartDate)) {
 				// ongoing
 			} else if (trip.getReoccurs() != null && trip.getReoccurs().doesReoccur()) {
 				// ongoing
@@ -56,7 +50,7 @@ public class Constraints {
 		}
 		for (int i = 0; i < trips.size(); i++) {
 			trip = trips.get(i);
-			if (trip.getStartdate() != null && !trip.getStartdate().isBefore(ONE_YEAR_FROM_TODAY)) {
+			if (trip.getStartdate() != null && !trip.getStartdate().isBefore(DateAndTimeHandler.oneYearFromToday)) {
 				LOG.debug("Remove Trip more than one year in the future with id: " + trip.getTripId());
 				trips.remove(i);
 				i--;
@@ -65,10 +59,10 @@ public class Constraints {
 		if (useTimePeriod) {
 			for (int i = 0; i < trips.size(); i++) {
 				trip = trips.get(i);
-				if (trip.getStartdate() != null && !trip.getStartdate().isAfter(FEED_END_DATE)) {
+				if (trip.getStartdate() != null && !trip.getStartdate().isAfter(OBAWriterParameter.feedEndDate)) {
 					// within period
 				} else if (trip.getReoccurs() != null
-						&& !Collections.disjoint(FEED_TIME_PERIOD_WEEK_DAYS, trip.getReoccurs().getReoccurDays())) {
+						&& !Collections.disjoint(OBAWriterParameter.feedTimePeriodWeekDays, trip.getReoccurs().getReoccurDays())) {
 					// within period
 				} else {
 					LOG.debug("Remove Trip after feed time period with id: " + trip.getTripId());
@@ -87,8 +81,8 @@ public class Constraints {
 			if (missingreoccurs != null) {
 				for (int i = 0; i < missingreoccurs.size(); i++) {
 					missingreoccursItem = missingreoccurs.get(i).toLocalDate();
-					if (missingreoccursItem.isBefore(FEED_START_DATE)
-							|| (useTimePeriod && missingreoccursItem.isAfter(FEED_END_DATE))) {
+					if (missingreoccursItem.isBefore(OBAWriterParameter.feedStartDate)
+							|| (useTimePeriod && missingreoccursItem.isAfter(OBAWriterParameter.feedEndDate))) {
 						LOG.debug("Remove missingreoccurs day: " + missingreoccursItem);
 						missingreoccurs.remove(i);
 						i--;
@@ -121,16 +115,5 @@ public class Constraints {
 				}
 			}
 		}
-	}
-
-	private static List<DayOfWeek> getFeedTimePeriodWeekDays() {
-		List<DayOfWeek> feedTimePeriodWeekDays = new ArrayList<>();
-		DayOfWeek feedStartDay = FEED_START_DATE.getDayOfWeek();
-		feedTimePeriodWeekDays.add(feedStartDay);
-		int i = 1;
-		while (i < 7 && !FEED_START_DATE.plusDays(i).isAfter(FEED_END_DATE)) {
-			feedTimePeriodWeekDays.add(feedStartDay.plus(i++));
-		}
-		return feedTimePeriodWeekDays;
 	}
 }
