@@ -3,13 +3,18 @@ package com.ride2go.ridetogtfsconverter.gtfs;
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.*;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.onebusaway.csv_entities.exceptions.MissingRequiredEntityException;
 import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
@@ -39,7 +44,6 @@ import com.ride2go.ridetogtfsconverter.configuration.GtfsFeedinfoProperties.Feed
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.model.item.Place;
 import com.ride2go.ridetogtfsconverter.model.item.Recurring;
-import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -100,6 +104,29 @@ public class OBAWriterService implements WriterService {
 		addToFile(getStopTimes(), "stop_times.txt");
 
 		LOG.info("Saved {} offers as GTFS", trips.size());
+	}
+
+	public void zip(final File directory, String gtfsZipFile) {
+		File[] gtfsTxtFiles = directory.listFiles();
+		try {
+			FileOutputStream fos = new FileOutputStream(gtfsZipFile);
+			ZipOutputStream zos = new ZipOutputStream(fos);
+
+			for (File file : gtfsTxtFiles) {
+				zos.putNextEntry(new ZipEntry(file.getName()));
+				byte[] bytes = Files.readAllBytes(Paths.get(file.getPath()));
+				zos.write(bytes, 0, bytes.length);
+				zos.flush();
+				zos.closeEntry();
+			}
+			zos.finish();
+			zos.close();
+			fos.flush();
+			fos.close();
+		} catch (IOException e) {
+			LOG.error("Problem packing GTFS zip file {} from all the text files: {}", gtfsZipFile, e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	private void init(final List<Offer> offers, final File directory) {

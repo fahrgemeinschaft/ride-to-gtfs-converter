@@ -10,4 +10,6 @@ public interface WriterService {
 	public void writeProviderInfoAsGTFS(final File directory);
 
 	public void writeOfferDataAsGTFS(final List<Offer> offers, final File directory);
+
+	public void zip(final File directory, String gtfsZipFile);
 }
