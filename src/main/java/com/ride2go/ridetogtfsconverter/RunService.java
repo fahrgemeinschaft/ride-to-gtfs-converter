@@ -38,6 +38,8 @@ public class RunService {
 
 	private static final String DEFAULT_GTFS_OUTPUT_DIRECTORY = "data/";
 
+	private static final String DEFAULT_GTFS_OUTPUT_FILE = "output/gtfs.zip";
+
 	private static final int PAGE_SIZE = 5000;
 
 	private static final Sort TRIP_SORT = Sort.by(Order.desc("tripId"));
@@ -54,6 +56,9 @@ public class RunService {
 	@Value("${custom.gtfs.output.directory}")
 	private String gtfsOutputDirectory;
 
+	@Value("${custom.gtfs.output.file}")
+	private String gtfsOutputFile;
+
 	@Value("${custom.trips.by-user}")
 	private String tripsByUser;
 
@@ -69,7 +74,9 @@ public class RunService {
 		OBAWriterParameter.feedTimePeriodWeekDays = OBAWriterParameter.getFeedTimePeriodWeekDays();
 
 		final File directory = getDirectory();
-		LOG.info("Use directory " + directory);
+		LOG.info("Use data directory " + directory);
+		final String file = getFile();
+		LOG.info("Use output file " + file);
 		final String userId = getUserId();
 		area();
 		writerService.writeProviderInfoAsGTFS(directory);
@@ -80,6 +87,7 @@ public class RunService {
 			LOG.info("UserId not specified. Get trips from all users.");
 			processAllTrips(directory);
 		}
+		writerService.zip(directory, file);
 	}
 
 	private File getDirectory() throws IOException {
@@ -94,6 +102,10 @@ public class RunService {
 			throw e;
 		}
 		return directory;
+	}
+
+	private String getFile() throws IOException {
+		return getValueOrDefault(gtfsOutputFile, DEFAULT_GTFS_OUTPUT_FILE);
 	}
 
 	private String getUserId() {
