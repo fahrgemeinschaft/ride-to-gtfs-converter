@@ -31,8 +31,8 @@ public class Constraints {
 	@Value("${custom.gtfs.trips.use-time-period}")
 	private boolean useTimePeriod;
 
-	@Value("${custom.gtfs.trips.area}")
-	private String area;
+	@Value("${custom.gtfs.trips.area:}")
+	public String area;
 
 	public void ongoingTrips(List<EntityTrip> trips) {
 		EntityTrip trip;
@@ -93,7 +93,7 @@ public class Constraints {
 	}
 
 	public void withinArea(List<Offer> offers) {
-		if (area.equals(AREA_BADEN_WUERTTEMBERG)) {
+		if (area != null && area.equals(AREA_BADEN_WUERTTEMBERG)) {
 			boolean withinArea;
 			double lat, lon;
 			for (int i = 0; i < offers.size(); i++) {
