@@ -28,6 +28,7 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
   implementation 'org.springframework.boot:spring-boot-starter-webflux'
   implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j'
+  implementation 'org.springframework.boot:spring-boot-starter-mail'
   // routing with GraphHopper
   implementation 'com.graphhopper:directions-api-client:0.10.0'
   // for openrouteservice routing response model
