@@ -43,7 +43,7 @@ dependencies {
   implementation ('com.conveyal:gtfs-validation-lib:0.1.8') {
 	exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
-  implementation('com.conveyal:gtfs-validator-json:0.1.8') {
+  implementation ('com.conveyal:gtfs-validator-json:0.1.8') {
 	exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
   // for file and directory handling
