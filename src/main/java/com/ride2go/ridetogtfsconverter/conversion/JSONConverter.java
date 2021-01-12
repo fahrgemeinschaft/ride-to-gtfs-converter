@@ -45,10 +45,8 @@ public class JSONConverter {
 				return objectMapper.readValue(jsonString, returnType);
 			} catch (JsonMappingException e) {
 				LOG.warn("JSON mapping problem while deserializing: " + e.getMessage());
-				e.printStackTrace();
 			} catch (JsonProcessingException e) {
 				LOG.warn("JSON processing problem while deserializing: " + e.getMessage());
-				e.printStackTrace();
 			}
 		}
 		return null;

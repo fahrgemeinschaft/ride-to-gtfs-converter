@@ -60,7 +60,7 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 			processor.run();
 			result = processor.getOutput();
 		} catch (IOException e) {
-			LOG.error("Validation problem running feed processor for {}: {}", input, e.getMessage());
+			LOG.error("Validation problem running feed processor for {}:", input);
 			e.printStackTrace();
 		}
 		return result;
@@ -73,7 +73,7 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 		try {
 			serializer.serializeToFile(new File(output));
 		} catch (IOException e) {
-			LOG.error("Validation problem serializing to output file {}: {}", output, e.getMessage());
+			LOG.error("Validation problem serializing to output file {}:", output);
 			e.printStackTrace();
 		}
 	}
@@ -158,7 +158,7 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 			Map<?, ?> map = (Map<?, ?>) jsonConverter.fromJSONString(jsonString, Map.class);
 			return jsonConverter.toPrettyJSONString(map);
 		} catch (IOException e) {
-			LOG.error("Problem while converting result to formated String: " + e.getMessage());
+			LOG.error("Problem while converting result to formated String:");
 			e.printStackTrace();
 		}
 		return null;

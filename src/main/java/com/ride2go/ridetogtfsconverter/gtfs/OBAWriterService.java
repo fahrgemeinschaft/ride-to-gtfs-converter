@@ -124,7 +124,7 @@ public class OBAWriterService implements WriterService {
 			fos.flush();
 			fos.close();
 		} catch (IOException e) {
-			LOG.error("Problem packing GTFS zip file {} from all the text files: {}", gtfsZipFile, e.getMessage());
+			LOG.error("Problem packing GTFS zip file {} from all the text files:", gtfsZipFile);
 			e.printStackTrace();
 		}
 	}
@@ -157,7 +157,7 @@ public class OBAWriterService implements WriterService {
 		} catch (MissingRequiredEntityException e) {
 			// file has no entries yet
 		} catch (IOException e) {
-			LOG.error("Problem getting entries out of file {}: {}", f, e.getMessage());
+			LOG.error("Problem getting entries out of file {}:", f);
 			e.printStackTrace();
 		}
 		try {
@@ -186,7 +186,8 @@ public class OBAWriterService implements WriterService {
 		try {
 			writer.close();
 		} catch (IOException e) {
-			LOG.error("Could not write {} file: {}", f, e.getMessage());
+			LOG.error("Could not write {} file:", f);
+			e.printStackTrace();
 		}
 	}
 

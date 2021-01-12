@@ -28,16 +28,16 @@ public class MailAlert implements Alert {
 			message.setText(text);
 			javaMailSender.send(message);
 		} catch (MailParseException e) {
-			LOG.error("Problem while parsing the mail message: " + e.getMessage());
+			LOG.error("Problem while parsing the mail message:");
 			e.printStackTrace();
 		} catch (MailAuthenticationException e) {
-			LOG.error("Mail sender authentication failed: " + e.getMessage());
+			LOG.error("Mail sender authentication failed:");
 			e.printStackTrace();
 		} catch (MailSendException e) {
-			LOG.error("Problem while sending the mail message: " + e.getMessage());
+			LOG.error("Problem while sending the mail message:");
 			e.printStackTrace();
 		} catch (MailException e) {
-			LOG.error("Mail problem: " + e.getMessage());
+			LOG.error("Mail problem:");
 			e.printStackTrace();
 		}
 	}
