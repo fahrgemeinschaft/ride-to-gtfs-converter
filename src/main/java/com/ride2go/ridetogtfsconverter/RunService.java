@@ -92,6 +92,7 @@ public class RunService {
 				processAllTrips(directory);
 			}
 			writerService.zip(directory, gtfsFile);
+			applicationPropertiesValidator.validMailAddresses(gtfsValidator.getRecipients());
 			gtfsValidator.check(gtfsFile, gtfsValidationFile);
 		}
 	}
