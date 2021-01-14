@@ -39,8 +39,8 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 	@Autowired
 	JSONConverter jsonConverter;
 
-	@Value("${custom.mail.recipients}")
-	private String[] recipients;
+	@Value("${custom.mail.recipients:#{null}}")
+	public String[] recipients;
 
 	@Override
 	public void check(String input, String output) {
@@ -111,7 +111,7 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 
 	private void notifying(FeedValidationResult result) {
 		if (recipients == null || recipients.length == 0) {
-			LOG.warn("No mail addresses configured to send GTFS feed validation failures to");
+			LOG.error("No mail addresses configured to send GTFS feed validation failures to");
 		} else if (getAmountOfProblems(result) > 0) {
 			alert.send(recipients, "GTFS feed validation failure",
 					"Validation result is:\n" + convertResultToString(result));
