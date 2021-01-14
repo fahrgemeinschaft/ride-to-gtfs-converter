@@ -5,12 +5,44 @@ import java.io.File;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ApplicationPropertiesValidator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ApplicationPropertiesValidator.class);
+
+	// emailregex.com
+	private static final String VALID_EMAIL_ADDRESS = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
+
+	@Value("${spring.mail.username:}")
+	private String mailSenderAddress;
+
+	public boolean validMailAddresses(String[] recipients) {
+		if (mailSenderAddress == null || mailSenderAddress.trim().isEmpty()) {
+			LOG.error("Mail sender for GTFS validation alerts must not be empty");
+			return false;
+		}
+		if (!mailSenderAddress.matches(VALID_EMAIL_ADDRESS)) {
+			LOG.error("Mail sender for GTFS validation alerts is not a valid e-mail address: " + mailSenderAddress);
+			return false;
+		}
+		if (recipients == null || recipients.length == 0) {
+			return false;
+		}
+		for (String recipient : recipients) {
+			if (recipient == null || recipient.trim().isEmpty()) {
+				LOG.error("One mail recipient for GTFS validation alerts is empty");
+				return false;
+			}
+			if (!recipient.matches(VALID_EMAIL_ADDRESS)) {
+				LOG.error("One mail recipient for GTFS validation alerts is not a valid e-mail address: " + recipient);
+				return false;
+			}
+		}
+		return true;
+	}
 
 	public boolean validDirectoriesAndFiles(String gtfsDatasetDirectory, String gtfsFile, String gtfsValidationFile) {
 		try {
