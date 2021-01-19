@@ -21,6 +21,9 @@ public class MailAlert implements Alert {
 
 	@Override
 	public void send(String[] recipients, String subject, String text) {
+		if (recipients == null || recipients.length == 0) {
+			LOG.error("No mail recipient addresses found");
+		}
 		try {
 			SimpleMailMessage message = new SimpleMailMessage();
 			message.setTo(recipients);
