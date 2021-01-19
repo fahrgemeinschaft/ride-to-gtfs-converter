@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.onebusaway.csv_entities.exceptions.MissingRequiredEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,8 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConveyalGtfsValidator.class);
 
+	private static final String SUBJECT = "GTFS feed validation failure";
+
 	private static final String ROUTE_TYPE_1700 = "route_type is 1700";
 
 	private static final String DUPLICATE_STOPS = "duplicateStops";
@@ -40,15 +44,34 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 	JSONConverter jsonConverter;
 
 	@Value("${custom.mail.recipients:#{null}}")
-	public String[] recipients;
+	private String[] recipients;
+
+	public String[] getRecipients() {
+		return recipients;
+	}
 
 	@Override
 	public void check(String input, String output) {
-		FeedValidationResult result = validateFeed(input);
-		printResultToFile(result, output);
-		ignoreKnownProblems(result);
-		printResultToFile(result, output.replaceAll("\\.(?=(?i)json(?-i)$)", "-critical."));
-		notifying(result);
+		if (exists(input)) {
+			FeedValidationResult result = validateFeed(input);
+			if (result != null) {
+				printResultToFile(result, output);
+				ignoreKnownProblems(result);
+				printResultToFile(result, output.replaceAll("\\.(?=(?i)json(?-i)$)", "-critical."));
+				notifying(result);
+			}
+		}
+	}
+
+	private boolean exists(String input) {
+		File file = new File(input);
+		if (!file.exists()) {
+			String message = String.format("GTFS feed zip file %s not found", input);
+			LOG.error(message);
+			alert.send(recipients, SUBJECT, message);
+			return false;
+		}
+		return true;
 	}
 
 	private FeedValidationResult validateFeed(String input) {
@@ -59,9 +82,25 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 		try {
 			processor.run();
 			result = processor.getOutput();
+			if (result == null) {
+				String message = "No GTFS feed validation result";
+				LOG.error(message);
+				alert.send(recipients, SUBJECT, message);
+			}
 		} catch (IOException e) {
-			LOG.error("Validation problem running feed processor for {}:", input);
+			String message = "Validation problem running feed processor for " + input;
+			LOG.error(message + ":");
 			e.printStackTrace();
+			alert.send(recipients, SUBJECT, message);
+		} catch (MissingRequiredEntityException e) {
+			String message = "Required entity in GTFS feed not found: " + e.getMessage();
+			LOG.error(message);
+			alert.send(recipients, SUBJECT, message);
+		} catch (Exception e) {
+			String message = "Validation error running feed processor for " + input;
+			LOG.error(message + ":");
+			e.printStackTrace();
+			alert.send(recipients, SUBJECT, message);
 		}
 		return result;
 	}
@@ -73,48 +112,50 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 		try {
 			serializer.serializeToFile(new File(output));
 		} catch (IOException e) {
-			LOG.error("Validation problem serializing to output file {}:", output);
+			String message = "Validation problem serializing to output file " + output;
+			LOG.error(message + ":");
 			e.printStackTrace();
+			alert.send(recipients, SUBJECT, message);
 		}
 	}
 
 	private void ignoreKnownProblems(FeedValidationResult result) {
-		if (result != null) {
-			InvalidValue value;
-			Iterator<InvalidValue> routesInvalidValues = getInvalidValues(result.routes);
-			if (routesInvalidValues != null) {
-				while (routesInvalidValues.hasNext()) {
-					value = routesInvalidValues.next();
-					if (value != null
-							&& value.problemDescription != null
-							&& value.problemDescription.equals(ROUTE_TYPE_1700)) {
-						routesInvalidValues.remove();
-					}
+		InvalidValue value;
+		Iterator<InvalidValue> routesInvalidValues = getInvalidValues(result.routes);
+		if (routesInvalidValues != null) {
+			while (routesInvalidValues.hasNext()) {
+				value = routesInvalidValues.next();
+				if (value != null
+						&& value.problemDescription != null
+						&& value.problemDescription.equals(ROUTE_TYPE_1700)) {
+					routesInvalidValues.remove();
 				}
 			}
-			Iterator<InvalidValue> stopsInvalidValues = getInvalidValues(result.stops);
-			if (stopsInvalidValues != null) {
-				while (stopsInvalidValues.hasNext()) {
-					value = stopsInvalidValues.next();
-					if (value != null
-							&& value.affectedField != null
-							&& value.affectedField.equals(DUPLICATE_STOPS)) {
-						stopsInvalidValues.remove();
-					}
-				}
-			}
-			ignoreMissingShape(result.stops);
-			ignoreMissingShape(result.trips);
-			ignoreMissingShape(result.shapes);
 		}
+		Iterator<InvalidValue> stopsInvalidValues = getInvalidValues(result.stops);
+		if (stopsInvalidValues != null) {
+			while (stopsInvalidValues.hasNext()) {
+				value = stopsInvalidValues.next();
+				if (value != null
+						&& value.affectedField != null
+						&& value.affectedField.equals(DUPLICATE_STOPS)) {
+					stopsInvalidValues.remove();
+				}
+			}
+		}
+		ignoreMissingShape(result.stops);
+		ignoreMissingShape(result.trips);
+		ignoreMissingShape(result.shapes);
 	}
 
 	private void notifying(FeedValidationResult result) {
-		if (recipients == null || recipients.length == 0) {
-			LOG.error("No mail addresses configured to send GTFS feed validation failures to");
-		} else if (getAmountOfProblems(result) > 0) {
-			alert.send(recipients, "GTFS feed validation failure",
-					"Validation result is:\n" + convertResultToString(result));
+		if (getAmountOfProblems(result) > 0) {
+			LOG.error("GTFS feed is not valid");
+			alert.send(recipients, SUBJECT, "Validation result is:\n" + convertResultToString(result));
+		} else if (getAmountOfProblems(result) == -1) {
+			String message = "Could not determine amount of problems in GTFS feed validation result";
+			LOG.error(message);
+			alert.send(recipients, SUBJECT, message + ":\n" + convertResultToString(result));
 		}
 	}
 
@@ -144,9 +185,14 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 	}
 
 	private int getAmountOfProblems(FeedValidationResult result) {
-		return result == null ? 0
-				: getAmountOfProblems(result.routes) + getAmountOfProblems(result.shapes)
-						+ getAmountOfProblems(result.stops) + getAmountOfProblems(result.trips);
+		try {
+			return getAmountOfProblems(result.routes)
+					+ getAmountOfProblems(result.shapes)
+					+ getAmountOfProblems(result.stops)
+					+ getAmountOfProblems(result.trips);
+		} catch (NoSuchElementException e) {
+			return -1;
+		}
 	}
 
 	private String convertResultToString(FeedValidationResult result) {
@@ -158,16 +204,16 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 			Map<?, ?> map = (Map<?, ?>) jsonConverter.fromJSONString(jsonString, Map.class);
 			return jsonConverter.toPrettyJSONString(map);
 		} catch (IOException e) {
-			LOG.error("Problem while converting result to formated String:");
+			LOG.error("Problem while converting GTFS feed validation result to formated String:");
 			e.printStackTrace();
 		}
-		return null;
+		return "(Could not be determined)";
 	}
 
-	private int getAmountOfProblems(ValidationResult result) {
+	private int getAmountOfProblems(ValidationResult result) throws NoSuchElementException {
 		if (result != null && result.invalidValues != null) {
 			return result.invalidValues.size();
 		}
-		return 0;
+		throw new NoSuchElementException();
 	}
 }
