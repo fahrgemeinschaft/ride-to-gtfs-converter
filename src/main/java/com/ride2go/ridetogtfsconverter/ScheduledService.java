@@ -28,7 +28,7 @@ public class ScheduledService {
 				runService.run();
 				finished = true;
 			} else {
-				LOG.info("Can't do a new run if the last run is not finished");
+				LOG.warn("Can't do a new run if the last run is not finished");
 			}
 		}
 	}
