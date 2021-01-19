@@ -103,7 +103,7 @@ public class OBAWriterService implements WriterService {
 		addToFile(trips, "trips.txt");
 		addToFile(getStopTimes(), "stop_times.txt");
 
-		LOG.info("Saved {} offers as GTFS", trips.size());
+		LOG.info("Saved {} offer(s) as GTFS", trips.size());
 	}
 
 	public void zip(final File directory, String gtfsZipFile) {
