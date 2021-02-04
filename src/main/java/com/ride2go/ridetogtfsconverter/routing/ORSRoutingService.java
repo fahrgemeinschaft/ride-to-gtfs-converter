@@ -36,7 +36,7 @@ public class ORSRoutingService extends RoutingService {
 
 	private static final String MESSAGE = "ORS response body element ";
 
-	@Value("${custom.routing.service.ors.domain}")
+	@Value("${custom.routing.service.ors.domain:}")
 	private String customDomain;
 
 	public Response calculateRoute(final Request request) {
@@ -72,7 +72,7 @@ public class ORSRoutingService extends RoutingService {
 
 	private String getUri(final Request request) {
 		String uriPart = DEFAULT_DOMAIN + URI_PATH;
-		if (!customDomain.isEmpty()) {
+		if (!customDomain.trim().isEmpty()) {
 			uriPart = customDomain + URI_PATH;
 		}
 		return new StringBuilder()

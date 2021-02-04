@@ -40,7 +40,7 @@ public class OSRMRoutingService extends RoutingService {
 
 	private static final String MESSAGE = "OSRM response body element ";
 
-	@Value("${custom.routing.service.osrm.domain}")
+	@Value("${custom.routing.service.osrm.domain:}")
 	private String customDomain;
 
 	@Autowired
@@ -54,9 +54,10 @@ public class OSRMRoutingService extends RoutingService {
 
 	public Response calculateRoute(final Request request) {
 		Response response = new Response();
+		String uri = "";
 		try {
 			check(request);
-			String uri = getUri(request);
+			uri = getUri(request);
 			OSRMResponse osrmResponse = getRequest(uri, RESPONSE_CLASS, FALLBACK_RESPONSE).block();
 			if (FALLBACK_RESPONSE.equals(osrmResponse)) {
 				return response;
@@ -79,14 +80,14 @@ public class OSRMRoutingService extends RoutingService {
 			}
 			convert(route, response);
 		} catch (RoutingException e) {
-			LOG.error("OSRM routing error: " + e.getMessage());
+			LOG.error("OSRM routing error for URI '{}': {}", uri, e.getMessage());
 		}
 		return response;
 	}
 
 	private String getUri(final Request request) {
 		String uriPart = DEFAULT_DOMAIN + URI_PATH;
-		if (!customDomain.isEmpty()) {
+		if (!customDomain.trim().isEmpty()) {
 			uriPart = customDomain + URI_PATH;
 		}
 		return new StringBuilder()
