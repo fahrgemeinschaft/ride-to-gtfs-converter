@@ -2,7 +2,6 @@ package com.ride2go.ridetogtfsconverter;
 
 import static com.ride2go.ridetogtfsconverter.configuration.SystemConfiguration.AMOUNT_OF_THREADS;
 import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TIME_ZONE_ID_BERLIN;
-import static com.ride2go.ridetogtfsconverter.validation.Constraints.AREA_BADEN_WUERTTEMBERG;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -22,14 +21,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 
+import com.ride2go.ridetogtfsconverter.exception.OBAException;
 import com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter;
 import com.ride2go.ridetogtfsconverter.gtfs.WriterService;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
+import com.ride2go.ridetogtfsconverter.normalization.ApplicationPropertiesNormalizer;
 import com.ride2go.ridetogtfsconverter.ridesdata.ReaderService;
 import com.ride2go.ridetogtfsconverter.routing.RoutingHandler;
 import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;
+import com.ride2go.ridetogtfsconverter.util.FileHandler;
 import com.ride2go.ridetogtfsconverter.validation.ApplicationPropertiesValidator;
-import com.ride2go.ridetogtfsconverter.validation.Constraints;
 import com.ride2go.ridetogtfsconverter.validation.GtfsValidator;
 
 @Service
@@ -42,22 +43,22 @@ public class RunService {
 	private static final Sort TRIP_SORT = Sort.by(Order.desc("tripId"));
 
 	@Autowired
+	private ApplicationPropertiesNormalizer applicationPropertiesNormalizer;
+
+	@Autowired
 	private ApplicationPropertiesValidator applicationPropertiesValidator;
-
-	@Autowired
-	private WriterService writerService;
-
-	@Autowired
-	private GtfsValidator gtfsValidator;
-
-	@Autowired
-	private Constraints constraints;
 
 	@Autowired
 	private ReaderService readerService;
 
 	@Autowired
 	private RoutingHandler routingHandler;
+
+	@Autowired
+	private WriterService writerService;
+
+	@Autowired
+	private GtfsValidator gtfsValidator;
 
 	@Value("${custom.gtfs.dataset.directory:data/dataset/}")
 	private String gtfsDatasetDirectory;
@@ -72,41 +73,40 @@ public class RunService {
 	private String tripsByUser;
 
 	protected void run() throws Exception {
+		updateDateAndTimeParameter();
+		if (applicationPropertiesValidator.validDirectoriesAndFiles(
+				gtfsDatasetDirectory, gtfsFile, gtfsValidationFile)) {
+			applicationPropertiesValidator.validArea();
+			final File directory = new File(gtfsDatasetDirectory);
+			try {
+				writerService.writeProviderInfoAsGTFS(directory);
+				if (tripsByUser != null && !tripsByUser.trim().isEmpty()) {
+					LOG.info("Get all trips from User " + tripsByUser);
+					processTripsByUser(directory, tripsByUser);
+				} else {
+					LOG.info("UserId not specified. Get trips from all users.");
+					processAllTrips(directory);
+				}
+			} catch (OBAException e) {
+				LOG.error("Problem while writing GTFS data with OneBusAway: " + e.getMessage());
+			}
+			FileHandler.zipGtfsDatasetFiles(directory, gtfsFile);
+			gtfsValidator.setRecipients(
+					applicationPropertiesNormalizer.normalizeMailRecipientAddressArray(
+							gtfsValidator.getRecipients()));
+			applicationPropertiesValidator.validMailAddresses(
+					gtfsValidator.getRecipients());
+			gtfsValidator.check(gtfsFile, gtfsValidationFile);
+		}
+	}
+
+	private void updateDateAndTimeParameter() {
 		DateAndTimeHandler.today = LocalDate.now(TIME_ZONE_ID_BERLIN);
 		DateAndTimeHandler.oneMonthFromToday = DateAndTimeHandler.today.plusMonths(1);
 		DateAndTimeHandler.oneYearFromToday = DateAndTimeHandler.today.plusYears(1);
 		OBAWriterParameter.feedStartDate = DateAndTimeHandler.today;
 		OBAWriterParameter.feedEndDate = DateAndTimeHandler.oneMonthFromToday;
 		OBAWriterParameter.feedTimePeriodWeekDays = OBAWriterParameter.getFeedTimePeriodWeekDays();
-
-		if (applicationPropertiesValidator
-				.validDirectoriesAndFiles(gtfsDatasetDirectory, gtfsFile, gtfsValidationFile)) {
-			area();
-			final File directory = new File(gtfsDatasetDirectory);
-			writerService.writeProviderInfoAsGTFS(directory);
-			if (tripsByUser != null && !tripsByUser.trim().isEmpty()) {
-				LOG.info("Get all trips from User " + tripsByUser);
-				processTripsByUser(directory, tripsByUser);
-			} else {
-				LOG.info("UserId not specified. Get trips from all users.");
-				processAllTrips(directory);
-			}
-			writerService.zip(directory, gtfsFile);
-			applicationPropertiesValidator.validMailAddresses(gtfsValidator.getRecipients());
-			gtfsValidator.check(gtfsFile, gtfsValidationFile);
-		}
-	}
-
-	private void area() {
-		if (constraints.area == null || constraints.area.isEmpty()) {
-			LOG.info("No area restriction");
-		} else {
-			if (constraints.area.equals(AREA_BADEN_WUERTTEMBERG)) {
-				LOG.info("Trips only from the area: " + constraints.area);
-			} else {
-				LOG.info("Area {} not recognized", constraints.area);
-			}
-		}
 	}
 
 	private void processTripsByUser(final File directory, String userId) {
