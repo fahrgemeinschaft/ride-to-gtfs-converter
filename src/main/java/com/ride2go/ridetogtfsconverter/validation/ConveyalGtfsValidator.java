@@ -24,12 +24,15 @@ import com.conveyal.gtfs.validator.json.serialization.JsonSerializer;
 import com.ride2go.ridetogtfsconverter.conversion.JSONConverter;
 import com.ride2go.ridetogtfsconverter.notification.Alert;
 
+import lombok.Getter;
+import lombok.Setter;
+
 @Service
 public class ConveyalGtfsValidator implements GtfsValidator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConveyalGtfsValidator.class);
 
-	private static final String SUBJECT = "GTFS feed validation failure";
+	private static final String MESSAGE_SUBJECT = "GTFS feed validation failure";
 
 	private static final String ROUTE_TYPE_1700 = "route_type is 1700";
 
@@ -44,11 +47,9 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 	JSONConverter jsonConverter;
 
 	@Value("${custom.mail.recipients:#{null}}")
+	@Getter
+	@Setter
 	private String[] recipients;
-
-	public String[] getRecipients() {
-		return recipients;
-	}
 
 	@Override
 	public void check(String input, String output) {
@@ -68,7 +69,7 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 		if (!file.exists()) {
 			String message = String.format("GTFS feed zip file %s not found", input);
 			LOG.error(message);
-			alert.send(recipients, SUBJECT, message);
+			alert.send(recipients, MESSAGE_SUBJECT, message);
 			return false;
 		}
 		return true;
@@ -85,22 +86,22 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 			if (result == null) {
 				String message = "No GTFS feed validation result";
 				LOG.error(message);
-				alert.send(recipients, SUBJECT, message);
+				alert.send(recipients, MESSAGE_SUBJECT, message);
 			}
 		} catch (IOException e) {
 			String message = "Validation problem running feed processor for " + input;
 			LOG.error(message + ":");
 			e.printStackTrace();
-			alert.send(recipients, SUBJECT, message);
+			alert.send(recipients, MESSAGE_SUBJECT, message);
 		} catch (MissingRequiredEntityException e) {
 			String message = "Required entity in GTFS feed not found: " + e.getMessage();
 			LOG.error(message);
-			alert.send(recipients, SUBJECT, message);
+			alert.send(recipients, MESSAGE_SUBJECT, message);
 		} catch (Exception e) {
 			String message = "Validation error running feed processor for " + input;
 			LOG.error(message + ":");
 			e.printStackTrace();
-			alert.send(recipients, SUBJECT, message);
+			alert.send(recipients, MESSAGE_SUBJECT, message);
 		}
 		return result;
 	}
@@ -115,7 +116,7 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 			String message = "Validation problem serializing to output file " + output;
 			LOG.error(message + ":");
 			e.printStackTrace();
-			alert.send(recipients, SUBJECT, message);
+			alert.send(recipients, MESSAGE_SUBJECT, message);
 		}
 	}
 
@@ -149,13 +150,15 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 	}
 
 	private void notifying(FeedValidationResult result) {
-		if (getAmountOfProblems(result) > 0) {
-			LOG.error("GTFS feed is not valid");
-			alert.send(recipients, SUBJECT, "Validation result is:\n" + convertResultToString(result));
-		} else if (getAmountOfProblems(result) == -1) {
-			String message = "Could not determine amount of problems in GTFS feed validation result";
+		if (getAmountOfProblems(result) != 0) {
+			String message = "GTFS feed is not valid. Validation result can be found in the json file.";
+			if (result.loadFailureReason != null) {
+				message += " Reason is: " + result.loadFailureReason;
+			}
 			LOG.error(message);
-			alert.send(recipients, SUBJECT, message + ":\n" + convertResultToString(result));
+			alert.send(recipients, MESSAGE_SUBJECT, "Validation result is:\n" + convertResultToString(result));
+		} else {
+			LOG.info("GTFS feed is valid");
 		}
 	}
 
