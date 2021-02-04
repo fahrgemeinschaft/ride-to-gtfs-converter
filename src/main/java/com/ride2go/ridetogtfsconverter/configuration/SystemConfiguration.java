@@ -67,7 +67,7 @@ public class SystemConfiguration {
 
 	@Bean
 	@Qualifier("configured")
-	public RoutingService getRoutingService(@Value("${custom.routing.service}") final String routingServiceChoice) {
+	public RoutingService getRoutingService(@Value("${custom.routing.service:}") final String routingServiceChoice) {
 		if (routingServiceChoice.equals("GH")) {
 			LOG.info("Use GraphHopper as routing engine");
 			return new GHRoutingService();
