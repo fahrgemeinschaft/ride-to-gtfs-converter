@@ -28,7 +28,7 @@ public class Constraints {
 
 	private static final GeoCoordinates COORD_BADEN_WUERTTEMBERG_RIGHT_TOP = new GeoCoordinates(49.9, 10.6);
 
-	@Value("${custom.gtfs.trips.use-time-period}")
+	@Value("${custom.gtfs.trips.use-time-period:false}")
 	private boolean useTimePeriod;
 
 	@Value("${custom.gtfs.trips.area:}")
