@@ -46,8 +46,9 @@ dependencies {
   implementation ('com.conveyal:gtfs-validator-json:0.1.8') {
 	exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
-  // for file and directory handling
+  // for util handling
   implementation 'commons-io:commons-io:2.8.0'
+  implementation 'org.apache.commons:commons-lang3:3.11'
   
   compileOnly 'org.projectlombok:lombok'
   runtimeOnly 'mysql:mysql-connector-java'
