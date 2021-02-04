@@ -9,6 +9,7 @@ import org.springframework.mail.MailParseException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,7 +23,14 @@ public class MailAlert implements Alert {
 	@Override
 	public void send(String[] recipients, String subject, String text) {
 		if (recipients == null || recipients.length == 0) {
-			LOG.error("No mail recipient addresses found");
+			LOG.error("No mail recipient addresses found for notification");
+			return;
+		}
+		if (javaMailSender == null
+				|| ((JavaMailSenderImpl) javaMailSender).getUsername() == null
+				|| ((JavaMailSenderImpl) javaMailSender).getUsername().trim().isEmpty()) {
+			LOG.error("No mail sender address found for notification");
+			return;
 		}
 		try {
 			SimpleMailMessage message = new SimpleMailMessage();
@@ -30,6 +38,7 @@ public class MailAlert implements Alert {
 			message.setSubject(subject);
 			message.setText(text);
 			javaMailSender.send(message);
+			LOG.info("Notification mail has been send");
 		} catch (MailParseException e) {
 			LOG.error("Problem while parsing the mail message:");
 			e.printStackTrace();
