@@ -1,12 +1,11 @@
 package com.ride2go.ridetogtfsconverter.routing
 
+import org.springframework.beans.factory.annotation.Autowired
+
 class OSMNodeServiceTest extends RoutingSpecification {
 
-	private WebClientService service = new OSMNodeService()
-
-	def setup() {
-		initService(service)
-	}
+	@Autowired
+	private OSMNodeService service
 
 	def "A valid node GET request should work and return the right results"() {
 		given:

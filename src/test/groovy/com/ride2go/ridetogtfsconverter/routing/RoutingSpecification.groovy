@@ -2,16 +2,20 @@ package com.ride2go.ridetogtfsconverter.routing
 
 import com.ride2go.ridetogtfsconverter.conversion.JSONConverter
 import com.ride2go.ridetogtfsconverter.model.item.routing.Request
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.ExchangeStrategies
-
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.junit4.SpringRunner
 import spock.lang.Specification
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 class RoutingSpecification extends Specification {
 
 	Request request = new Request()
 	
-	JSONConverter jsonConverter = new JSONConverter()
+	@Autowired
+	JSONConverter jsonConverter
 
 	void resultIs(response) {
 		assert response != null
@@ -41,15 +45,5 @@ class RoutingSpecification extends Specification {
 			}
 		}
 		100 * count / list.size()
-	}
-
-	void initService(service) {
-		service.webClient = WebClient.builder()
-			.exchangeStrategies(
-				ExchangeStrategies.builder()
-					.codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024))
-					.build()
-			)
-			.build()
 	}
 }
