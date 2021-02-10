@@ -26,4 +26,4 @@ to start the application and generate the GTFS once.
 
 to start the application and generate the GTFS by the given cron schedule.
 
-Default GTFS output directory is `data/`.
+Default GTFS output directory is `data/output/`. When using scheduling the GTFS file will also be published to http://localhost:8080/gtfs.zip
