@@ -52,16 +52,20 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 	private String[] recipients;
 
 	@Override
-	public void check(String input, String output) {
+	public boolean check(String input, String output) {
+		boolean valid = false;
 		if (exists(input)) {
 			FeedValidationResult result = validateFeed(input);
 			if (result != null) {
-				printResultToFile(result, output);
-				ignoreKnownProblems(result);
-				printResultToFile(result, output.replaceAll("\\.(?=(?i)json(?-i)$)", "-critical."));
-				notifying(result);
+				if (printResultToFile(result, output)) {
+					ignoreKnownProblems(result);
+					if (printResultToFile(result, output.replaceAll("\\.(?=(?i)json(?-i)$)", "-critical."))) {
+						valid = notifying(result);
+					}
+				}
 			}
 		}
+		return valid;
 	}
 
 	private boolean exists(String input) {
@@ -106,7 +110,7 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 		return result;
 	}
 
-	private void printResultToFile(FeedValidationResult result, String output) {
+	private boolean printResultToFile(FeedValidationResult result, String output) {
 		FeedValidationResultSet results = new FeedValidationResultSet();
 		results.add(result);
 		JsonSerializer serializer = new JsonSerializer(results);
@@ -117,7 +121,9 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 			LOG.error(message + ":");
 			e.printStackTrace();
 			alert.send(recipients, MESSAGE_SUBJECT, message);
+			return false;
 		}
+		return true;
 	}
 
 	private void ignoreKnownProblems(FeedValidationResult result) {
@@ -149,7 +155,7 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 		ignoreMissingShape(result.shapes);
 	}
 
-	private void notifying(FeedValidationResult result) {
+	private boolean notifying(FeedValidationResult result) {
 		if (getAmountOfProblems(result) != 0) {
 			String message = "GTFS feed is not valid. Validation result can be found in the json file.";
 			if (result.loadFailureReason != null) {
@@ -157,8 +163,10 @@ public class ConveyalGtfsValidator implements GtfsValidator {
 			}
 			LOG.error(message);
 			alert.send(recipients, MESSAGE_SUBJECT, "Validation result is:\n" + convertResultToString(result));
+			return false;
 		} else {
 			LOG.info("GTFS feed is valid");
+			return true;
 		}
 	}
 

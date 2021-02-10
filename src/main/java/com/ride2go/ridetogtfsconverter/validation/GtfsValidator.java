@@ -6,5 +6,5 @@ public interface GtfsValidator {
 
 	public void setRecipients(String[] recipients);
 
-	public void check(String input, String output);
+	public boolean check(String input, String output);
 }
