@@ -8,14 +8,14 @@ Define database connection and GTFS option properties in the **application.prope
 
 * spring.datasource.url
 * spring.datasource.username
-* spring.datasource.password
+* spring.datasource.password      
 ...
 
 or use environment variables:
 
 * DB_URL
 * DB_USERNAME
-* DB_PASSWORD
+* DB_PASSWORD      
 ...
 
 `./gradlew clean bootRun --args 'runOnce'`
