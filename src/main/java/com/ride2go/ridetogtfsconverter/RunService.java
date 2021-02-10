@@ -38,6 +38,8 @@ public class RunService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RunService.class);
 
+	private static final String PUBLIC_GTFS_FILE_LOCATION = "src/main/resources/public/gtfs.zip";
+
 	private static final int PAGE_SIZE = 5000;
 
 	private static final Sort TRIP_SORT = Sort.by(Order.desc("tripId"));
@@ -96,7 +98,9 @@ public class RunService {
 							gtfsValidator.getRecipients()));
 			applicationPropertiesValidator.validMailAddresses(
 					gtfsValidator.getRecipients());
-			gtfsValidator.check(gtfsFile, gtfsValidationFile);
+			if (gtfsValidator.check(gtfsFile, gtfsValidationFile)) {
+				FileHandler.exposeGtfsFile(gtfsFile, PUBLIC_GTFS_FILE_LOCATION);
+			}
 		}
 	}
 
