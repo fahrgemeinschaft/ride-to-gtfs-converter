@@ -35,11 +35,17 @@ public class GHRoutingService extends RoutingService {
 
 	private static final String MESSAGE = "GH response element ";
 
+	@Autowired
+	JSONConverter jsonConverter;
+
 	@Value("${custom.routing.service.gh.domain:}")
 	private String customDomain;
 
-	@Autowired
-	JSONConverter jsonConverter;
+	@Value("${custom.routing.service.gh.key:}")
+	private String ghKey;
+
+	// (required) Get your key at graphhopper.com
+	private String key;
 
 	public Response calculateRoute(final Request request) {
 		Response response = new Response();
@@ -54,6 +60,9 @@ public class GHRoutingService extends RoutingService {
 			if (!customDomain.trim().isEmpty()) {
 				client = new ApiClient().setBasePath(customDomain);
 				routing = new RoutingApi(client);
+			}
+			if (key == null) {
+				key = System.getProperty("graphhopper.key", ghKey);
 			}
 			RouteResponse ghResponse = routing.routeGet(points, pointsEncoded, key, locale, instructions, vehicle,
 					elevation, calcPoints, pointHint, chDisable, weighting, edgeTraversal, algorithm, heading,

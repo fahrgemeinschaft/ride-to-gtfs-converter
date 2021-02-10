@@ -39,6 +39,9 @@ public class ORSRoutingService extends RoutingService {
 	@Value("${custom.routing.service.ors.domain:}")
 	private String customDomain;
 
+	@Value("${custom.routing.service.ors.key:}")
+	private String apiKey;
+
 	public Response calculateRoute(final Request request) {
 		Response response = new Response();
 		try {
@@ -78,7 +81,7 @@ public class ORSRoutingService extends RoutingService {
 		return new StringBuilder()
 				.append(uriPart)
 				.append("?api_key=")
-				.append(API_KEY)
+				.append(apiKey)
 				.append("&start=")
 				.append(request.getOrigin().getLongitude())
 				.append(",")
