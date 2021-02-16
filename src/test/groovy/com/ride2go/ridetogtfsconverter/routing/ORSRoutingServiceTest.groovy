@@ -27,6 +27,6 @@ class ORSRoutingServiceTest extends RoutingSpecification {
 			int addressExistsInPercentage = calculateFieldExistence(response.drivingInstructionPoints, 'address')
 
 		then:
-			addressExistsInPercentage >= 89
+			addressExistsInPercentage >= 88
 	}
 }
