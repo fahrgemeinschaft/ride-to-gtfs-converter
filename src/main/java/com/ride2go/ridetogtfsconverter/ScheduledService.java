@@ -20,7 +20,7 @@ public class ScheduledService {
 
 	private boolean finished = true;
 
-	@Scheduled(cron = "${custom.scheduling.job.cron}", zone = TIME_ZONE_BERLIN)
+	@Scheduled(cron = "${custom.scheduling.job.cron:}", zone = TIME_ZONE_BERLIN)
 	public void run() throws Exception {
 		if (enable) {
 			if (finished) {
@@ -28,7 +28,7 @@ public class ScheduledService {
 				runService.run();
 				finished = true;
 			} else {
-				LOG.info("Can't do a new run if the last run is not finished");
+				LOG.warn("Can't do a new run if the last run is not finished");
 			}
 		}
 	}

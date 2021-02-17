@@ -2,10 +2,8 @@ package com.ride2go.ridetogtfsconverter;
 
 import static com.ride2go.ridetogtfsconverter.configuration.SystemConfiguration.AMOUNT_OF_THREADS;
 import static com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler.TIME_ZONE_ID_BERLIN;
-import static com.ride2go.ridetogtfsconverter.validation.Constraints.AREA_BADEN_WUERTTEMBERG;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.CancellationException;
@@ -13,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,26 +21,34 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 
+import com.ride2go.ridetogtfsconverter.exception.OBAException;
 import com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter;
 import com.ride2go.ridetogtfsconverter.gtfs.WriterService;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
+import com.ride2go.ridetogtfsconverter.normalization.ApplicationPropertiesNormalizer;
 import com.ride2go.ridetogtfsconverter.ridesdata.ReaderService;
 import com.ride2go.ridetogtfsconverter.routing.RoutingHandler;
 import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;
+import com.ride2go.ridetogtfsconverter.util.FileHandler;
+import com.ride2go.ridetogtfsconverter.validation.ApplicationPropertiesValidator;
+import com.ride2go.ridetogtfsconverter.validation.GtfsValidator;
 
 @Service
 public class RunService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RunService.class);
 
-	private static final String DEFAULT_GTFS_OUTPUT_DIRECTORY = "data/";
+	private static final String PUBLIC_GTFS_FILE_LOCATION = "src/main/resources/public/gtfs.zip";
 
 	private static final int PAGE_SIZE = 5000;
 
 	private static final Sort TRIP_SORT = Sort.by(Order.desc("tripId"));
 
 	@Autowired
-	private WriterService writerService;
+	private ApplicationPropertiesNormalizer applicationPropertiesNormalizer;
+
+	@Autowired
+	private ApplicationPropertiesValidator applicationPropertiesValidator;
 
 	@Autowired
 	private ReaderService readerService;
@@ -51,65 +56,61 @@ public class RunService {
 	@Autowired
 	private RoutingHandler routingHandler;
 
-	@Value("${custom.gtfs.output.directory}")
-	private String gtfsOutputDirectory;
+	@Autowired
+	private WriterService writerService;
 
-	@Value("${custom.trips.by-user}")
+	@Autowired
+	private GtfsValidator gtfsValidator;
+
+	@Value("${custom.gtfs.dataset.directory:data/dataset/}")
+	private String gtfsDatasetDirectory;
+
+	@Value("${custom.gtfs.file:data/output/gtfs.zip}")
+	private String gtfsFile;
+
+	@Value("${custom.gtfs.validation.file:data/validation/results.json}")
+	private String gtfsValidationFile;
+
+	@Value("${custom.trips.by-user:#{null}}")
 	private String tripsByUser;
 
-	@Value("${custom.gtfs.trips.area}")
-	private String area;
-
 	protected void run() throws Exception {
+		updateDateAndTimeParameter();
+		if (applicationPropertiesValidator.validDirectoriesAndFiles(
+				gtfsDatasetDirectory, gtfsFile, gtfsValidationFile)) {
+			applicationPropertiesValidator.validArea();
+			final File directory = new File(gtfsDatasetDirectory);
+			try {
+				writerService.writeProviderInfoAsGTFS(directory);
+				if (tripsByUser != null && !tripsByUser.trim().isEmpty()) {
+					LOG.info("Get all trips from User " + tripsByUser);
+					processTripsByUser(directory, tripsByUser);
+				} else {
+					LOG.info("UserId not specified. Get trips from all users.");
+					processAllTrips(directory);
+				}
+			} catch (OBAException e) {
+				LOG.error("Problem while writing GTFS data with OneBusAway: " + e.getMessage());
+			}
+			FileHandler.zipGtfsDatasetFiles(directory, gtfsFile);
+			gtfsValidator.setRecipients(
+					applicationPropertiesNormalizer.normalizeMailRecipientAddressArray(
+							gtfsValidator.getRecipients()));
+			applicationPropertiesValidator.validMailAddresses(
+					gtfsValidator.getRecipients());
+			if (gtfsValidator.check(gtfsFile, gtfsValidationFile)) {
+				FileHandler.exposeGtfsFile(gtfsFile, PUBLIC_GTFS_FILE_LOCATION);
+			}
+		}
+	}
+
+	private void updateDateAndTimeParameter() {
 		DateAndTimeHandler.today = LocalDate.now(TIME_ZONE_ID_BERLIN);
 		DateAndTimeHandler.oneMonthFromToday = DateAndTimeHandler.today.plusMonths(1);
 		DateAndTimeHandler.oneYearFromToday = DateAndTimeHandler.today.plusYears(1);
 		OBAWriterParameter.feedStartDate = DateAndTimeHandler.today;
 		OBAWriterParameter.feedEndDate = DateAndTimeHandler.oneMonthFromToday;
 		OBAWriterParameter.feedTimePeriodWeekDays = OBAWriterParameter.getFeedTimePeriodWeekDays();
-
-		final File directory = getDirectory();
-		LOG.info("Use directory " + directory);
-		final String userId = getUserId();
-		area();
-		writerService.writeProviderInfoAsGTFS(directory);
-		if (userId != null) {
-			LOG.info("Get all trips from User " + userId);
-			processTripsByUser(directory, userId);
-		} else {
-			LOG.info("UserId not specified. Get trips from all users.");
-			processAllTrips(directory);
-		}
-	}
-
-	private File getDirectory() throws IOException {
-		final String directoryString = getValueOrDefault(gtfsOutputDirectory, DEFAULT_GTFS_OUTPUT_DIRECTORY);
-		final File directory = new File(directoryString);
-		try {
-			if (directory.exists() && directory.isDirectory()) {
-				FileUtils.deleteDirectory(directory);
-			}
-		} catch (IOException e) {
-			LOG.error("Problem with given directory");
-			throw e;
-		}
-		return directory;
-	}
-
-	private String getUserId() {
-		return getValueOrDefault(tripsByUser, null);
-	}
-
-	private void area() {
-		if (area.isEmpty()) {
-			LOG.info("No area restriction");
-		} else {
-			if (area.equals(AREA_BADEN_WUERTTEMBERG)) {
-				LOG.info("Trips only from the area: " + area);
-			} else {
-				LOG.info("Area {} not recognized", area);
-			}
-		}
 	}
 
 	private void processTripsByUser(final File directory, String userId) {
@@ -140,15 +141,5 @@ public class RunService {
 			}
 			index += AMOUNT_OF_THREADS;
 		}
-	}
-
-	private String getValueOrDefault(String value, String defaultValue) {
-		if (value != null) {
-			value = value.trim();
-			if (!value.isEmpty()) {
-				return value;
-			}
-		}
-		return defaultValue;
 	}
 }

@@ -35,24 +35,34 @@ public class GHRoutingService extends RoutingService {
 
 	private static final String MESSAGE = "GH response element ";
 
-	@Value("${custom.routing.service.gh.domain}")
-	private String customDomain;
-
 	@Autowired
 	JSONConverter jsonConverter;
+
+	@Value("${custom.routing.service.gh.domain:}")
+	private String customDomain;
+
+	@Value("${custom.routing.service.gh.key:}")
+	private String ghKey;
+
+	// (required) Get your key at graphhopper.com
+	private String key;
 
 	public Response calculateRoute(final Request request) {
 		Response response = new Response();
 		List<String> points = new ArrayList<>();
+		ApiClient client = null;
 		try {
 			check(request);
 			String origin = request.getOrigin().getLatitude() + "," + request.getOrigin().getLongitude();
 			String destination = request.getDestination().getLatitude() + "," + request.getDestination().getLongitude();
 			points = Arrays.asList(origin, destination);
 			RoutingApi routing = new RoutingApi();
-			if (!customDomain.isEmpty()) {
-				ApiClient client = new ApiClient().setBasePath(customDomain);
+			if (!customDomain.trim().isEmpty()) {
+				client = new ApiClient().setBasePath(customDomain);
 				routing = new RoutingApi(client);
+			}
+			if (key == null) {
+				key = System.getProperty("graphhopper.key", ghKey);
 			}
 			RouteResponse ghResponse = routing.routeGet(points, pointsEncoded, key, locale, instructions, vehicle,
 					elevation, calcPoints, pointHint, chDisable, weighting, edgeTraversal, algorithm, heading,
@@ -70,13 +80,18 @@ public class GHRoutingService extends RoutingService {
 			}
 			RouteResponsePath path = ghResponse.getPaths().get(0);
 			if (path == null) {
-				throw new RoutingException("response path is null");
+				throw new RoutingException("first response path is null");
 			}
 			convert(path, response);
 		} catch (RoutingException e) {
 			LOG.error("GH routing error: " + e.getMessage());
-		} catch (ApiException e) {
-			LOG.error("GH ApiException for {}: {}", jsonConverter.toJSONString(points), e.getMessage());
+		} catch (ApiException | IllegalArgumentException e) {
+			String messagePart = (client != null) ? "base URL path " + client.getBasePath() + " and " : "";
+			LOG.error("GH {} for {}points {}: {}",
+					e.getClass().getSimpleName(), messagePart, jsonConverter.toJSONString(points), e.getMessage());
+		} catch (Exception e) {
+			LOG.error("GH Exception for points {}:", jsonConverter.toJSONString(points));
+			e.printStackTrace();
 		}
 		return response;
 	}

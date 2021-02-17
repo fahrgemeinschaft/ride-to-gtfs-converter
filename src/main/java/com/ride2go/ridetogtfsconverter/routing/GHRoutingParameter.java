@@ -22,9 +22,6 @@ public class GHRoutingParameter {
 	// `elevation=true`!
 	protected static final Boolean pointsEncoded = false;
 
-	// (required) Get your key at graphhopper.com
-	protected static final String key = System.getProperty("graphhopper.key", "xxx");
-
 	// (optional) The locale of the resulting turn instructions. E.g. `pt_PT` for
 	// Portuguese or `de` for German.
 	protected static final String locale = "de";

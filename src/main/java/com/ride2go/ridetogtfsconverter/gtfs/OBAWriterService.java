@@ -1,6 +1,7 @@
 package com.ride2go.ridetogtfsconverter.gtfs;
 
 import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterParameter.*;
+import static com.ride2go.ridetogtfsconverter.gtfs.OBAWriterUtils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +12,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.onebusaway.csv_entities.exceptions.CsvEntityIOException;
 import org.onebusaway.csv_entities.exceptions.MissingRequiredEntityException;
+import org.onebusaway.csv_entities.exceptions.MissingRequiredFieldException;
 import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -36,10 +39,10 @@ import org.springframework.stereotype.Service;
 import com.ride2go.ridetogtfsconverter.configuration.GtfsAgencyProperties;
 import com.ride2go.ridetogtfsconverter.configuration.GtfsFeedinfoProperties;
 import com.ride2go.ridetogtfsconverter.configuration.GtfsFeedinfoProperties.Feedinfo;
+import com.ride2go.ridetogtfsconverter.exception.OBAException;
 import com.ride2go.ridetogtfsconverter.model.item.Offer;
 import com.ride2go.ridetogtfsconverter.model.item.Place;
 import com.ride2go.ridetogtfsconverter.model.item.Recurring;
-import com.ride2go.ridetogtfsconverter.util.DateAndTimeHandler;
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -47,7 +50,7 @@ public class OBAWriterService implements WriterService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OBAWriterService.class);
 
-	@Value("${custom.gtfs.trip.link}")
+	@Value("${custom.gtfs.trip.link:}")
     private String tripLink;
 
 	@Autowired
@@ -99,7 +102,7 @@ public class OBAWriterService implements WriterService {
 		addToFile(trips, "trips.txt");
 		addToFile(getStopTimes(), "stop_times.txt");
 
-		LOG.info("Saved {} offers as GTFS", trips.size());
+		LOG.info("Saved {} offer(s) as GTFS", trips.size());
 	}
 
 	private void init(final List<Offer> offers, final File directory) {
@@ -129,38 +132,32 @@ public class OBAWriterService implements WriterService {
 			}
 		} catch (MissingRequiredEntityException e) {
 			// file has no entries yet
+		} catch (CsvEntityIOException e) {
+			String message = String.format("%s when setting entity store to reader: %s",
+					e.getClass().getSimpleName(), e.getMessage());
+			throw new OBAException(message);
 		} catch (IOException e) {
-			LOG.error("Problem getting entries out of file {}: {}", f, e.getMessage());
+			LOG.error("Problem getting entries out of file {}:", f);
 			e.printStackTrace();
 		}
-		try {
-			if (dao != null) {
-				dao.close();
-			}
-		} catch (Exception e) {
-			LOG.error("Problem closing GtfsRelationalDaoImpl: " + e.getMessage());
-		}
-		try {
-			if (reader != null) {
-				reader.close();
-			}
-		} catch (IOException e) {
-			LOG.error("Problem closing GtfsReader: " + e.getMessage());
-		}
+		close(dao);
+		close(reader);
 		writeFile(listToSave, f);
 	}
 
 	private <T> void writeFile(final List<T> list, String f) {
 		GtfsWriter writer = new GtfsWriter();
 		writer.setOutputLocation(directory);
-		for (T item : list) {
-			writer.handleEntity(item);
-		}
 		try {
-			writer.close();
-		} catch (IOException e) {
-			LOG.error("Could not write {} file: {}", f, e.getMessage());
+			for (T item : list) {
+				writer.handleEntity(item);
+			}
+		} catch (MissingRequiredFieldException e) {
+			String message = String.format("%s when writing %s list to %s file: %s",
+					e.getClass().getSimpleName(), list.get(0).getClass().getSimpleName(), f, e.getMessage());
+			throw new OBAException(message);
 		}
+		close(writer, f);
 	}
 
 	private void setAgency() {
