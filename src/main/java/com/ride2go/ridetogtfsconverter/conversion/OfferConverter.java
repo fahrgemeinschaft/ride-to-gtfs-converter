@@ -65,7 +65,7 @@ public class OfferConverter {
 
 	private Recurring getRecurring(final EntityTrip trip) {
 		EntityReoccurs reoccurs = trip.getReoccurs();
-		if (reoccurs.doesReoccur()) {
+		if (reoccurs != null && reoccurs.doesReoccur()) {
 			Recurring recurring = new Recurring();
 			recurring.setMonday(reoccurs.getMo());
 			recurring.setTuesday(reoccurs.getTu());
